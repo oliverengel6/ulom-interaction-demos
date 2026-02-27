@@ -1,823 +1,500 @@
-import { useState } from "react";
-import styled from "styled-components";
+import { useState, useRef, useCallback, useEffect } from "react";
+import styled, { keyframes, css } from "styled-components";
 import {
   Button,
   ButtonType,
   ButtonSize,
-  IconButton,
-  IconButtonType,
-  IconButtonSize,
-  IconType,
   IconColor,
-  InlineChildren,
-  Inset,
-  InsetSize,
-  Logo,
-  LogoType,
-  SingleSelectGroup,
-  SingleSelectGroupSize,
-  SingleSelectGroupType,
   Spacing,
   StackChildren,
-  Tag,
-  TagSize,
-  TagType,
   Text,
   TextStyle,
   TextColor,
-  SearchField,
-  SearchFieldSize,
-  Alignment,
-  Justification,
-  SideNav,
-  SideNavGroup,
-  SideNavItem,
-  SideNavCell,
   Theme,
 } from "@doordash/prism-react";
+import { OrdersHomeDemo } from "./OrdersHome";
 
 // ============================================================================
-// LAYOUT CONTAINERS - Minimal styled-components for core layout structure
+// LAYOUT
 // ============================================================================
 
 const PageContainer = styled.div`
   display: flex;
-  flex-direction: column;
   min-height: 100vh;
-  background-color: ${IconColor.background.default};
+  background-color: #fff;
 `;
 
-const PageBody = styled.div`
-  display: flex;
-  flex: 1;
-`;
-
-const SidebarContainer = styled.div`
-  height: calc(100vh - 64px);
-  position: sticky;
-  top: 64px;
-  width: 220px;
+const Sidebar = styled.nav`
+  width: 260px;
+  min-width: 260px;
   border-right: 1px solid ${IconColor.border.default};
+  display: flex;
+  flex-direction: column;
+`;
+
+const SidebarHeader = styled.div`
+  padding: ${Spacing.large};
+  border-bottom: 1px solid ${IconColor.border.default};
+`;
+
+const SidebarBody = styled.div`
+  padding: ${Spacing.medium} ${Spacing.small};
+  display: flex;
+  flex-direction: column;
+  gap: ${Spacing.xxSmall};
+`;
+
+const SidebarSectionLabel = styled.div`
+  padding: ${Spacing.xSmall} ${Spacing.small};
+`;
+
+const SidebarItem = styled.button<{ $isActive: boolean }>`
+  all: unset;
+  cursor: pointer;
+  padding: ${Spacing.small} ${Spacing.medium};
+  border-radius: ${Theme.usage.borderRadius.medium};
+  border: ${(props) =>
+    props.$isActive ? `1px solid ${IconColor.border.default}` : "1px solid transparent"};
+  background-color: ${(props) =>
+    props.$isActive ? IconColor.background.default : "transparent"};
+
+  &:hover {
+    background-color: ${IconColor.background.hover};
+  }
 `;
 
 const MainContent = styled.main`
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow-x: hidden;
+  padding: ${Spacing.xLarge} 48px;
   min-width: 0;
 `;
 
 // ============================================================================
-// HEADER COMPONENTS - Matching real DoorDash header layout
+// DEMO AREA
 // ============================================================================
 
-const Header = styled.header`
+const DemoArea = styled.div`
   display: flex;
   align-items: center;
-  gap: ${Spacing.large};
-  background-color: ${IconColor.background.default};
-  border-bottom: 1px solid ${IconColor.border.default};
-  position: sticky;
-  top: 0;
-  height: 64px;
-  z-index: 100;
-`;
-
-const LogoWrapper = styled.div`
-  height: 100%;
-  display: flex;
-  align-items: center;
-  width: 220px;
-  padding-left: ${Spacing.large};
-`;
-
-const SearchWrapper = styled.div`
-  flex: 1;
-`;
-
-const HeaderControls = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${Spacing.xSmall};
-  margin-left: auto;
-  padding-right: ${Spacing.small};
-`;
-
-// LocationButton removed - using Prism Button with flatSecondary
-
-// ============================================================================
-// CONTENT AREA
-// ============================================================================
-
-// ContentArea removed - using Prism Inset
-
-// ============================================================================
-// CATEGORY PILLS - Matching real DoorDash style
-// ============================================================================
-
-const CategoryPillsWrapper = styled.div`
-  display: flex;
-  gap: ${Spacing.xSmall};
+  justify-content: center;
+  min-height: 200px;
+  border: 1px solid ${IconColor.border.default};
+  border-radius: ${Theme.usage.borderRadius.large};
+  padding: ${Spacing.xLarge};
   overflow-x: auto;
-  &::-webkit-scrollbar {
-    display: none;
-  }
-  -ms-overflow-style: none;
-  scrollbar-width: none;
 `;
 
 // ============================================================================
-// SECTION HEADER - Title with controls on the right
+// SPECS
 // ============================================================================
 
-const SectionHeader = styled.div`
+const SpecsToggle = styled.button`
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: ${Spacing.xSmall};
+`;
+
+const ChevronIcon = styled.span<{ $isOpen: boolean }>`
+  display: inline-flex;
+  transform: ${(props) => (props.$isOpen ? "rotate(0deg)" : "rotate(-90deg)")};
+  transition: transform 150ms ease;
+  font-size: 12px;
+`;
+
+const SpecCard = styled.div`
+  border: 1px solid ${IconColor.border.default};
+  border-radius: ${Theme.usage.borderRadius.medium};
+  overflow: hidden;
+`;
+
+const SpecCardHeader = styled.div`
+  padding: ${Spacing.small} ${Spacing.medium};
+  background-color: ${IconColor.background.hover};
+`;
+
+const SpecRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: ${Spacing.small} ${Spacing.medium};
+  border-top: 1px solid ${IconColor.border.default};
 `;
 
-const SectionControls = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${Spacing.xSmall};
-  flex-shrink: 0;
-`;
-
-// ============================================================================
-// RESPONSIVE GRID LAYOUTS - Single row, responsive columns, no wrapping
-// ============================================================================
-
-// Grid for small cards (Deals) - 6 columns that fill available width
-const ResponsiveGridSmall = styled.div`
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: ${Spacing.medium};
-`;
-
-// Grid for large cards (Most loved, Grocery) - 3 columns that fill available width
-const ResponsiveGridLarge = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: ${Spacing.medium};
+const SpecValue = styled.span`
+  font-family: "SF Mono", "Menlo", "Monaco", monospace;
+  font-size: 13px;
+  color: ${TextColor.text.default};
 `;
 
 // ============================================================================
-// CARD IMAGE - Positioned container for image with overlay elements
+// DATA
 // ============================================================================
 
-// Note: Prism ResponsivePicture is for DoorDash CDN URLs only. For external
-// images (like Unsplash), we need a minimal styled img component.
+interface SpecItem {
+  label: string;
+  value: string;
+}
 
-// Square image container with rounded corners (for Deals carousel)
-const CardImageContainerSquare = styled.div`
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  border-radius: ${Theme.usage.borderRadius.medium};
-  overflow: hidden;
-`;
+interface SpecGroup {
+  title: string;
+  specs: SpecItem[];
+}
 
-// Rectangular image container with rounded corners (for Most loved / Grocery)
-const CardImageContainer = styled.div`
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 10;
-  border-radius: ${Theme.usage.borderRadius.medium};
-  overflow: hidden;
-`;
+interface Demo {
+  id: string;
+  label: string;
+  description: string;
+  specs: SpecGroup[];
+}
 
-const CardImage = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-`;
-
-const ImageOverlay = styled.div`
-  position: absolute;
-  top: ${Spacing.xSmall};
-  right: ${Spacing.xSmall};
-`;
-
-// ============================================================================
-// MOCK DATA
-// ============================================================================
-
-const navItems = [
-  { id: "home", icon: IconType.HomeLine, label: "Home" },
-  { id: "grocery", icon: IconType.GroceryLine, label: "Grocery" },
-  { id: "retail", icon: IconType.RetailLine, label: "Retail" },
-  { id: "convenience", icon: IconType.ConvenienceLine, label: "Convenience" },
-  { id: "beauty", icon: IconType.BeautyLine, label: "Beauty" },
-  { id: "cbd", icon: IconType.EyedropperLine, label: "CBD/THC" },
-  { id: "office", icon: IconType.NotebookLine, label: "Office" },
-  { id: "home-goods", icon: IconType.LampLine, label: "Home Goods" },
-  { id: "browse", icon: IconType.SearchLine, label: "Browse All" },
-];
-
-const secondaryNavItems = [
-  { id: "orders", icon: IconType.ReceiptLine, label: "Orders" },
-  { id: "account", icon: IconType.PersonProfileLine, label: "Account" },
-  { id: "switch", icon: IconType.Swap, label: "Switch Account" },
-];
-
-const categories = [
-  { emoji: "🍛", label: "Indian" },
-  { emoji: "🍕", label: "Pizza" },
-  { emoji: "🟢", label: "DashPass" },
-  { emoji: "🥗", label: "Healthy" },
-  { emoji: "🥡", label: "Chinese" },
-  { emoji: "🍟", label: "Fast Food" },
-  { emoji: "🍰", label: "Desserts" },
-  { emoji: "🍔", label: "Burgers" },
-  { emoji: "🍗", label: "Chicken" },
-  { emoji: "🏷️", label: "Deals" },
-  { emoji: "🍜", label: "Thai" },
-  { emoji: "🥙", label: "Halal" },
-  { emoji: "🌮", label: "Mexican" },
-  { emoji: "🍣", label: "Sushi" },
-];
-
-const dealsRestaurants = [
+const demos: Demo[] = [
   {
-    id: 1,
-    name: "Taqueria Downtown",
-    rating: 4.5,
-    reviews: "200+",
-    distance: "0.2 mi",
-    time: "24 min",
-    promo: "$5 off on $25+",
-    image:
-      "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=400&h=300&fit=crop",
+    id: "loader-button",
+    label: "Loader button",
+    description:
+      'This loading button is used for actions like "Ready for pickup" and "Picked up by Dasher" to enable Mx to cancel the action if performed by mistake.',
+    specs: [
+      {
+        title: "Loading bar",
+        specs: [
+          { label: "Duration", value: "3000ms" },
+          { label: "Easing", value: "Linear" },
+          { label: "Direction", value: "Left → Right" },
+        ],
+      },
+      {
+        title: "Cancel — bar retract",
+        specs: [
+          { label: "Duration", value: "150ms" },
+          { label: "Easing", value: "Ease in" },
+        ],
+      },
+      {
+        title: "Cancel — text shake",
+        specs: [
+          { label: "Duration", value: "500ms" },
+          { label: "Easing", value: "Ease out" },
+        ],
+      },
+    ],
   },
   {
-    id: 2,
-    name: "The Cheesecake Factory",
-    rating: 4.3,
-    reviews: "500+",
-    distance: "1.2 mi",
-    time: "45 min",
-    promo: "$10 off on $50+",
-    image:
-      "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400&h=300&fit=crop",
-  },
-  {
-    id: 3,
-    name: "honeygrow",
-    rating: 4.6,
-    reviews: "300+",
-    distance: "0.8 mi",
-    time: "28 min",
-    promo: "20% off on $15+",
-    image:
-      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop",
-  },
-  {
-    id: 4,
-    name: "Domino's",
-    rating: 4.1,
-    reviews: "1k+",
-    distance: "0.5 mi",
-    time: "25 min",
-    promo: "35% off select items",
-    image:
-      "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&h=300&fit=crop",
-  },
-  {
-    id: 5,
-    name: "Alfalfa",
-    rating: 4.7,
-    reviews: "150+",
-    distance: "0.3 mi",
-    time: "20 min",
-    promo: "$4 off on $15+",
-    image:
-      "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop",
-  },
-  {
-    id: 6,
-    name: "Sarku Japan",
-    rating: 4.2,
-    reviews: "400+",
-    distance: "1.0 mi",
-    time: "35 min",
-    promo: "20% off on $15+",
-    image:
-      "https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?w=400&h=300&fit=crop",
-  },
-];
-
-const mostLovedRestaurants = [
-  {
-    id: 7,
-    name: "South of the Cloud",
-    rating: 4.5,
-    reviews: "200+",
-    distance: "0.2 mi",
-    time: "24 min",
-    fee: "$0 delivery fee over $7",
-    image:
-      "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400&h=300&fit=crop",
-  },
-  {
-    id: 8,
-    name: "Ayame Hibachi & Sushi",
-    rating: 4.7,
-    reviews: "1k+",
-    distance: "1.6 mi",
-    time: "60 min",
-    fee: "$0 delivery fee over $7",
-    sponsored: true,
-    image:
-      "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400&h=300&fit=crop",
-  },
-  {
-    id: 9,
-    name: "Bobwhite Counter",
-    rating: 4.7,
-    reviews: "6k+",
-    distance: "0.6 mi",
-    time: "25 min",
-    fee: "$0 delivery fee over $7",
-    tags: ["Customer favorite", "#1 Chicken"],
-    image:
-      "https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?w=400&h=300&fit=crop",
-  },
-  {
-    id: 10,
-    name: "62 secret kitchen",
-    rating: 4.5,
-    reviews: "200+",
-    distance: "0.5 mi",
-    time: "32 min",
-    fee: "$0 delivery fee over $7",
-    image:
-      "https://images.unsplash.com/photo-1596797038530-2c107229654b?w=400&h=300&fit=crop",
-  },
-  {
-    id: 11,
-    name: "Golden wings fish and chicken",
-    rating: 4.5,
-    reviews: "500+",
-    distance: "2.1 mi",
-    time: "44 min",
-    fee: "$0 delivery fee over $7",
-    promo: "$6 off on $40+",
-    sponsored: true,
-    image:
-      "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400&h=300&fit=crop",
-  },
-];
-
-const groceryStores = [
-  {
-    id: 1,
-    name: "ShopRite",
-    rating: 4.5,
-    reviews: "10k+",
-    distance: "0.2 mi",
-    time: "57 min",
-    fee: "$0 delivery fee on $7+ by 7:00 PM",
-    image:
-      "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=300&fit=crop",
-  },
-  {
-    id: 2,
-    name: "Stop & Shop",
-    rating: 4.6,
-    reviews: "2k+",
-    distance: "1.7 mi",
-    time: "89 min",
-    fee: "$0 delivery fee on $7+ by 7:32 PM",
-    image:
-      "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=400&h=300&fit=crop",
-  },
-  {
-    id: 3,
-    name: "ACME",
-    rating: 4.7,
-    reviews: "8k+",
-    distance: "0.9 mi",
-    time: "59 min",
-    fee: "$0 delivery fee on $7+ by 7:02 PM",
-    image:
-      "https://images.unsplash.com/photo-1579113800032-c38bd7635818?w=400&h=300&fit=crop",
-  },
-  {
-    id: 4,
-    name: "BJ's Wholesale Club",
-    rating: 4.7,
-    reviews: "3k+",
-    distance: "800 ft",
-    time: "56 min",
-    fee: "$0 delivery fee on $7+ by 6:59 PM",
-    image:
-      "https://images.unsplash.com/photo-1534723452862-4c874018d66d?w=400&h=300&fit=crop",
-  },
-  {
-    id: 5,
-    name: "99 Ranch Market",
-    rating: 4.3,
-    reviews: "1k+",
-    distance: "0.7 mi",
-    time: "67 min",
-    fee: "$0 delivery fee on $7+ by 7:15 PM",
-    image:
-      "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=400&h=300&fit=crop",
+    id: "orders-home",
+    label: "Order details transitions",
+    description:
+      "Transitions for opening and closing the full-screen order details view.",
+    specs: [
+      {
+        title: "Order detail — open",
+        specs: [
+          { label: "Duration", value: "250ms" },
+          { label: "Easing", value: "cubic-bezier(0.2, 0, 0, 1)" },
+          { label: "Scale", value: "0.92 → 1" },
+          { label: "Opacity", value: "0 → 1" },
+        ],
+      },
+      {
+        title: "Scrim — fade in",
+        specs: [
+          { label: "Duration", value: "200ms" },
+          { label: "Easing", value: "Ease out" },
+          { label: "Opacity", value: "0 → 0.5" },
+        ],
+      },
+      {
+        title: "Card — close bounce",
+        specs: [
+          { label: "Duration", value: "450ms" },
+          { label: "Easing", value: "Ease in-out" },
+          { label: "Keyframes", value: "1 → 0.95 → 0.98 → 1" },
+          { label: "Property", value: "Scale" },
+        ],
+      },
+    ],
   },
 ];
 
 // ============================================================================
-// MAIN COMPONENT
+// COMPONENT
 // ============================================================================
 
 export const Home = () => {
-  const [deliveryMode, setDeliveryMode] = useState<number>(0);
-  const [activeNavItem, setActiveNavItem] = useState<string | null>("home");
+  const [activeDemo, setActiveDemo] = useState(demos[0].id);
+  const [showSpecs, setShowSpecs] = useState(true);
+
+  const currentDemo = demos.find((d) => d.id === activeDemo)!;
 
   return (
     <PageContainer>
-      {/* ================================================================ */}
-      {/* HEADER - Spans full width */}
-      {/* ================================================================ */}
-      <Header>
-        <LogoWrapper>
-          <Logo type={LogoType.logo} />
-        </LogoWrapper>
+      <Sidebar>
+        <SidebarHeader>
+          <StackChildren size={Spacing.xxSmall}>
+            <Text textStyle={TextStyle.title.small}>ULOM Animation Demo</Text>
+            <Text textStyle={TextStyle.body.small.default} color={TextColor.text.subdued.default}>
+              Questions? @Oliver on Slack
+            </Text>
+          </StackChildren>
+        </SidebarHeader>
 
-        <SearchWrapper>
-          <SearchField
-            size={SearchFieldSize.small}
-            placeholder="Search DoorDash"
-            label="Search"
-            isRounded
-            isLabelHidden
-            value=""
-            onChange={() => {}}
-          />
-        </SearchWrapper>
-
-        <HeaderControls>
-          <Button
-            type={ButtonType.secondary}
-            size={ButtonSize.small}
-            leadingIcon={IconType.LocationPinEnabledFill}
-            trailingIcon={IconType.ChevronDown}
-            isInline
-          >
-            140 Bay St
-          </Button>
-
-          <SingleSelectGroup
-            size={SingleSelectGroupSize.small}
-            type={SingleSelectGroupType.secondaryPill}
-            options={["Delivery", "Pickup"]}
-            selectedIndex={deliveryMode}
-            onChange={(index) => setDeliveryMode(index ?? 0)}
-            accessibilityLabel="Select delivery or pickup"
-            isInline
-          />
-
-          <IconButton
-            iconType={IconType.NotifyLine}
-            size={IconButtonSize.small}
-            type={IconButtonType.secondary}
-            accessibilityLabel="Notifications"
-          />
-
-          <Button
-            type={ButtonType.primary}
-            size={ButtonSize.small}
-            leadingIcon={IconType.CartFill}
-            isInline
-          >
-            0
-          </Button>
-        </HeaderControls>
-      </Header>
-
-      {/* ================================================================ */}
-      {/* PAGE BODY - Sidebar + Main Content */}
-      {/* ================================================================ */}
-      <PageBody>
-        {/* Sidebar */}
-        <SidebarContainer>
-          <SideNav
-            label="Main navigation"
-            activeItem={activeNavItem}
-            onActiveItemChange={(item) => setActiveNavItem(item)}
-            width={180}
-            shouldFillContainer
-          >
-            <SideNavGroup hasSeparator>
-              {navItems.map((item) => (
-                <SideNavItem key={item.id} id={item.id}>
-                  <SideNavCell
-                    icon={item.icon}
-                    label={item.label}
-                    isActive={activeNavItem === item.id}
-                  />
-                </SideNavItem>
-              ))}
-            </SideNavGroup>
-
-            <SideNavGroup hasSeparator={false}>
-              {secondaryNavItems.map((item) => (
-                <SideNavItem key={item.id} id={item.id}>
-                  <SideNavCell
-                    icon={item.icon}
-                    label={item.label}
-                    isActive={activeNavItem === item.id}
-                  />
-                </SideNavItem>
-              ))}
-            </SideNavGroup>
-          </SideNav>
-        </SidebarContainer>
-
-        {/* Main Content */}
-        <MainContent>
-          {/* Content */}
-          <Inset size={InsetSize.medium} horizontalSize={InsetSize.large}>
-            <StackChildren size={Spacing.large}>
-              {/* Welcome Message */}
-              <Text textStyle={TextStyle.title.large}>
-                Good evening, Zachary
+        <SidebarBody>
+          <SidebarSectionLabel>
+            <Text textStyle={TextStyle.label.small.strong} color={TextColor.text.subdued.default}>
+              DEMOS
+            </Text>
+          </SidebarSectionLabel>
+          {demos.map((demo) => (
+            <SidebarItem
+              key={demo.id}
+              $isActive={activeDemo === demo.id}
+              onClick={() => setActiveDemo(demo.id)}
+            >
+              <Text
+                textStyle={
+                  activeDemo === demo.id
+                    ? TextStyle.label.medium.strong
+                    : TextStyle.label.medium.default
+                }
+              >
+                {demo.label}
               </Text>
+            </SidebarItem>
+          ))}
+        </SidebarBody>
+      </Sidebar>
 
-              {/* Category Pills */}
-              <CategoryPillsWrapper>
-                {categories.map((category) => (
-                  <Button
-                    key={category.label}
-                    type={ButtonType.tertiary}
-                    size={ButtonSize.medium}
-                    leadingText={category.emoji}
-                    isInline
-                  >
-                    {category.label}
-                  </Button>
+      <MainContent>
+        <StackChildren size={Spacing.large}>
+          <StackChildren size={Spacing.xSmall}>
+            <Text textStyle={TextStyle.title.large}>{currentDemo.label}</Text>
+            <Text textStyle={TextStyle.body.medium.default} color={TextColor.text.subdued.default}>
+              {currentDemo.description}
+            </Text>
+          </StackChildren>
+
+          <DemoArea>
+            {activeDemo === "loader-button" && <LoaderButtonDemo />}
+            {activeDemo === "orders-home" && <OrdersHomeDemo />}
+          </DemoArea>
+
+          <StackChildren size={Spacing.medium}>
+            <SpecsToggle onClick={() => setShowSpecs(!showSpecs)}>
+              <ChevronIcon $isOpen={showSpecs}>▼</ChevronIcon>
+              <Text textStyle={TextStyle.body.medium.default}>
+                {showSpecs ? "Hide specs" : "Show specs"}
+              </Text>
+            </SpecsToggle>
+
+            {showSpecs && (
+              <StackChildren size={Spacing.medium}>
+                {currentDemo.specs.map((group) => (
+                  <SpecCard key={group.title}>
+                    <SpecCardHeader>
+                      <Text textStyle={TextStyle.label.small.default}>
+                        {group.title}
+                      </Text>
+                    </SpecCardHeader>
+                    {group.specs.map((spec) => (
+                      <SpecRow key={spec.label}>
+                        <Text
+                          textStyle={TextStyle.body.small.default}
+                          color={TextColor.text.subdued.default}
+                        >
+                          {spec.label}
+                        </Text>
+                        <SpecValue>{spec.value}</SpecValue>
+                      </SpecRow>
+                    ))}
+                  </SpecCard>
                 ))}
-              </CategoryPillsWrapper>
-
-              {/* Deals for you Section */}
-              <StackChildren size={Spacing.medium}>
-                <SectionHeader>
-                  <Text textStyle={TextStyle.title.large}>Deals for you</Text>
-                  <SectionControls>
-                    <Button
-                      type={ButtonType.flatSecondary}
-                      size={ButtonSize.small}
-                      isInline
-                    >
-                      See All
-                    </Button>
-                    <IconButton
-                      iconType={IconType.ChevronLeft}
-                      size={IconButtonSize.small}
-                      type={IconButtonType.tertiary}
-                      accessibilityLabel="Previous"
-                    />
-                    <IconButton
-                      iconType={IconType.ChevronRight}
-                      size={IconButtonSize.small}
-                      type={IconButtonType.tertiary}
-                      accessibilityLabel="Next"
-                    />
-                  </SectionControls>
-                </SectionHeader>
-
-                <ResponsiveGridSmall>
-                  {dealsRestaurants.slice(0, 6).map((restaurant) => (
-                    <StackChildren key={restaurant.id} size={Spacing.xSmall}>
-                      <CardImageContainerSquare>
-                        <CardImage
-                          src={restaurant.image}
-                          alt={restaurant.name}
-                        />
-                        <ImageOverlay>
-                          <IconButton
-                            iconType={IconType.FavoriteLine}
-                            size={IconButtonSize.small}
-                            type={IconButtonType.tertiary}
-                            accessibilityLabel="Save to favorites"
-                          />
-                        </ImageOverlay>
-                      </CardImageContainerSquare>
-                      <StackChildren size={Spacing.xxSmall}>
-                        <Text
-                          textStyle={TextStyle.label.small.strong}
-                          color={TextColor.positive.default}
-                        >
-                          {restaurant.promo}
-                        </Text>
-                        <Text textStyle={TextStyle.label.medium.strong}>
-                          {restaurant.name}
-                        </Text>
-                      </StackChildren>
-                    </StackChildren>
-                  ))}
-                </ResponsiveGridSmall>
               </StackChildren>
-
-              {/* Most loved Section */}
-              <StackChildren size={Spacing.medium}>
-                <SectionHeader>
-                  <Text textStyle={TextStyle.title.large}>Most loved</Text>
-                  <SectionControls>
-                    <Button
-                      type={ButtonType.flatSecondary}
-                      size={ButtonSize.small}
-                      isInline
-                    >
-                      See All
-                    </Button>
-                    <IconButton
-                      iconType={IconType.ChevronLeft}
-                      size={IconButtonSize.small}
-                      type={IconButtonType.tertiary}
-                      accessibilityLabel="Previous"
-                    />
-                    <IconButton
-                      iconType={IconType.ChevronRight}
-                      size={IconButtonSize.small}
-                      type={IconButtonType.tertiary}
-                      accessibilityLabel="Next"
-                    />
-                  </SectionControls>
-                </SectionHeader>
-
-                <ResponsiveGridLarge>
-                  {mostLovedRestaurants.slice(0, 3).map((restaurant) => (
-                    <StackChildren key={restaurant.id} size={Spacing.xSmall}>
-                      <CardImageContainer>
-                        <CardImage
-                          src={restaurant.image}
-                          alt={restaurant.name}
-                        />
-                      </CardImageContainer>
-                      <StackChildren size={Spacing.xxSmall}>
-                        <InlineChildren
-                          justifyContent={Justification.spaceBetween}
-                          alignItems={Alignment.center}
-                        >
-                          <Text textStyle={TextStyle.label.medium.strong}>
-                            {restaurant.name}
-                          </Text>
-                          <IconButton
-                            iconType={IconType.FavoriteLine}
-                            size={IconButtonSize.small}
-                            type={IconButtonType.flatSecondary}
-                            accessibilityLabel="Save restaurant"
-                          />
-                        </InlineChildren>
-                        <InlineChildren size={Spacing.xxSmall}>
-                          <Text textStyle={TextStyle.body.small.strong}>
-                            {restaurant.rating}★
-                          </Text>
-                          <Text
-                            textStyle={TextStyle.body.small.default}
-                            color={TextColor.text.subdued.default}
-                          >
-                            ({restaurant.reviews})
-                          </Text>
-                          <Text
-                            textStyle={TextStyle.body.small.default}
-                            color={TextColor.text.subdued.default}
-                          >
-                            • {restaurant.distance}
-                          </Text>
-                          <Text
-                            textStyle={TextStyle.body.small.default}
-                            color={TextColor.text.subdued.default}
-                          >
-                            • {restaurant.time}
-                          </Text>
-                        </InlineChildren>
-                        <Text
-                          textStyle={TextStyle.body.small.default}
-                          color={TextColor.text.subdued.default}
-                        >
-                          {restaurant.fee}
-                        </Text>
-                        {restaurant.promo && (
-                          <Text
-                            textStyle={TextStyle.label.small.strong}
-                            color={TextColor.positive.default}
-                          >
-                            {restaurant.promo}
-                          </Text>
-                        )}
-                        {restaurant.sponsored && (
-                          <Text
-                            textStyle={TextStyle.body.small.default}
-                            color={TextColor.text.subdued.default}
-                          >
-                            Sponsored
-                          </Text>
-                        )}
-                        {restaurant.tags && (
-                          <InlineChildren size={Spacing.xSmall}>
-                            {restaurant.tags.map((tag) => (
-                              <Tag
-                                key={tag}
-                                size={TagSize.small}
-                                text={tag}
-                                tagType={TagType.informational}
-                              />
-                            ))}
-                          </InlineChildren>
-                        )}
-                      </StackChildren>
-                    </StackChildren>
-                  ))}
-                </ResponsiveGridLarge>
-              </StackChildren>
-
-              {/* Grocery Section */}
-              <StackChildren size={Spacing.medium}>
-                <SectionHeader>
-                  <Text textStyle={TextStyle.title.large}>Grocery</Text>
-                  <SectionControls>
-                    <Button
-                      type={ButtonType.flatSecondary}
-                      size={ButtonSize.small}
-                      isInline
-                    >
-                      See All
-                    </Button>
-                    <IconButton
-                      iconType={IconType.ChevronLeft}
-                      size={IconButtonSize.small}
-                      type={IconButtonType.tertiary}
-                      accessibilityLabel="Previous"
-                    />
-                    <IconButton
-                      iconType={IconType.ChevronRight}
-                      size={IconButtonSize.small}
-                      type={IconButtonType.tertiary}
-                      accessibilityLabel="Next"
-                    />
-                  </SectionControls>
-                </SectionHeader>
-
-                <ResponsiveGridLarge>
-                  {groceryStores.slice(0, 3).map((store) => (
-                    <StackChildren key={store.id} size={Spacing.xSmall}>
-                      <CardImageContainer>
-                        <CardImage src={store.image} alt={store.name} />
-                        <ImageOverlay>
-                          <IconButton
-                            iconType={IconType.FavoriteLine}
-                            size={IconButtonSize.small}
-                            type={IconButtonType.tertiary}
-                            accessibilityLabel="Save to favorites"
-                          />
-                        </ImageOverlay>
-                      </CardImageContainer>
-                      <StackChildren size={Spacing.xxSmall}>
-                        <Text textStyle={TextStyle.label.medium.strong}>
-                          {store.name}
-                        </Text>
-                        <InlineChildren size={Spacing.xxSmall}>
-                          <Text textStyle={TextStyle.body.small.default}>
-                            {store.rating}★
-                          </Text>
-                          <Text
-                            textStyle={TextStyle.body.small.default}
-                            color={TextColor.text.subdued.default}
-                          >
-                            ({store.reviews})
-                          </Text>
-                          <Text
-                            textStyle={TextStyle.body.small.default}
-                            color={TextColor.text.subdued.default}
-                          >
-                            • {store.distance}
-                          </Text>
-                          <Text
-                            textStyle={TextStyle.body.small.default}
-                            color={TextColor.text.subdued.default}
-                          >
-                            • 🛒 {store.time}
-                          </Text>
-                        </InlineChildren>
-                        <Text
-                          textStyle={TextStyle.body.small.default}
-                          color={TextColor.text.subdued.default}
-                        >
-                          {store.fee}
-                        </Text>
-                      </StackChildren>
-                    </StackChildren>
-                  ))}
-                </ResponsiveGridLarge>
-              </StackChildren>
-            </StackChildren>
-          </Inset>
-        </MainContent>
-      </PageBody>
+            )}
+          </StackChildren>
+        </StackChildren>
+      </MainContent>
     </PageContainer>
   );
 };
+
+// ============================================================================
+// LOADER BUTTON STYLES
+// ============================================================================
+
+const shakeKeyframes = keyframes`
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(-5px); }
+  40%  { transform: translateX(5px); }
+  60%  { transform: translateX(-3px); }
+  100% { transform: translateX(0); }
+`;
+
+const LoaderBtnWrapper = styled.div<{ $isShaking: boolean }>`
+  position: relative;
+  display: inline-flex;
+  width: 260px;
+  border-radius: 9999px;
+  overflow: hidden;
+  cursor: pointer;
+
+  & > button {
+    width: 100%;
+    pointer-events: none;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+    height: 64px !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+    font-size: 18px !important;
+  }
+
+  & > button * {
+    font-family: inherit !important;
+  }
+
+  & > button > * {
+    position: relative;
+    z-index: 2;
+    animation: ${(props) =>
+      props.$isShaking
+        ? css`${shakeKeyframes} 500ms ease-out`
+        : "none"};
+  }
+`;
+
+const LoaderBarOuter = styled.div`
+  position: absolute;
+  inset: 0;
+  transform-origin: left;
+  pointer-events: none;
+  z-index: 1;
+`;
+
+const LoaderBarInner = styled.div`
+  width: 100%;
+  height: 100%;
+  background-color: #d9dada;
+`;
+
+// ============================================================================
+// DEMO: Loader Button
+// ============================================================================
+
+type Phase = "idle" | "loading-init" | "loading" | "completing" | "cancelling" | "shaking";
+
+function LoaderButtonDemo() {
+  const [phase, setPhase] = useState<Phase>("idle");
+  const phaseRef = useRef<Phase>("idle");
+  const isCancellingRef = useRef(false);
+
+  phaseRef.current = phase;
+
+  useEffect(() => {
+    if (phase === "loading-init") {
+      let rafId = requestAnimationFrame(() => {
+        rafId = requestAnimationFrame(() => {
+          if (phaseRef.current === "loading-init") {
+            setPhase("loading");
+          }
+        });
+      });
+      return () => cancelAnimationFrame(rafId);
+    }
+
+    if (phase === "loading") {
+      const id = window.setTimeout(() => {
+        if (phaseRef.current === "loading") {
+          setPhase("completing");
+        }
+      }, 3000);
+      return () => clearTimeout(id);
+    }
+
+    if (phase === "completing") {
+      const id = setTimeout(() => {
+        if (phaseRef.current === "completing") {
+          setPhase("idle");
+        }
+      }, 400);
+      return () => clearTimeout(id);
+    }
+
+    if (phase === "cancelling") {
+      const id = setTimeout(() => {
+        if (phaseRef.current === "cancelling") {
+          setPhase("shaking");
+        }
+      }, 150);
+      return () => clearTimeout(id);
+    }
+
+    if (phase === "shaking") {
+      const id = setTimeout(() => {
+        setPhase("idle");
+        isCancellingRef.current = false;
+      }, 500);
+      return () => clearTimeout(id);
+    }
+  }, [phase]);
+
+  const handleClick = useCallback(() => {
+    if (phaseRef.current === "idle") {
+      setPhase("loading-init");
+    } else if (
+      (phaseRef.current === "loading" || phaseRef.current === "loading-init") &&
+      !isCancellingRef.current
+    ) {
+      isCancellingRef.current = true;
+      setPhase("cancelling");
+    }
+  }, []);
+
+  let barScale: number;
+  let barTransition: string;
+  let innerOpacity: number;
+  let innerTransition: string;
+
+  switch (phase) {
+    case "loading":
+      barScale = 1;
+      barTransition = "transform 3000ms linear";
+      innerOpacity = 1;
+      innerTransition = "none";
+      break;
+    case "completing":
+      barScale = 1;
+      barTransition = "none";
+      innerOpacity = 0;
+      innerTransition = "opacity 400ms ease-out";
+      break;
+    case "cancelling":
+      barScale = 0;
+      barTransition = "transform 150ms ease-in";
+      innerOpacity = 1;
+      innerTransition = "none";
+      break;
+    default:
+      barScale = 0;
+      barTransition = "none";
+      innerOpacity = 1;
+      innerTransition = "none";
+      break;
+  }
+
+  const isActive = phase === "loading-init" || phase === "loading";
+  const text = isActive ? "Tap to cancel" : "Ready for pickup";
+
+  return (
+    <LoaderBtnWrapper $isShaking={phase === "shaking"} onClick={handleClick}>
+      <LoaderBarOuter
+        style={{ transform: `scaleX(${barScale})`, transition: barTransition }}
+      >
+        <LoaderBarInner
+          style={{ opacity: innerOpacity, transition: innerTransition }}
+        />
+      </LoaderBarOuter>
+      <Button type={ButtonType.tertiary} size={ButtonSize.large}>
+        {text}
+      </Button>
+    </LoaderBtnWrapper>
+  );
+}
