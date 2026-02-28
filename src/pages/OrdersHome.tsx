@@ -73,20 +73,6 @@ const TabItem = styled.button<{ $isActive: boolean }>`
   white-space: nowrap;
 `;
 
-const Badge = styled.span`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  border-radius: 9999px;
-  background: #d9dada;
-  font-size: 12px;
-  font-weight: 600;
-  color: #6c6c6c;
-`;
-
 const MenuBtn = styled.div`
   position: relative;
   flex-shrink: 0;
@@ -153,14 +139,6 @@ const CardBody = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-`;
-
-const CardHeaderRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  min-height: 48px;
 `;
 
 const PlaceholderLine = styled.div<{ $width?: string; $height?: string }>`
@@ -257,161 +235,6 @@ const Overlay = styled.div`
   animation: ${overlayScaleIn} 250ms cubic-bezier(0.2, 0, 0, 1);
 `;
 
-const OverlayTopBar = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 16px;
-  font-size: 12px;
-  color: #000;
-`;
-
-const OverlayHeader = styled.div`
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: 4px 16px 16px;
-`;
-
-const OverlayHeaderLeft = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
-
-const OverlayHeaderRight = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const StatusBadge = styled.span`
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 10px;
-  border-radius: 9999px;
-  background: #006a25;
-  font-size: 13px;
-  font-weight: 600;
-  color: #fff;
-`;
-
-const OverlayBody = styled.div`
-  flex: 1;
-  display: flex;
-  gap: 24px;
-  padding: 0 16px;
-  overflow: hidden;
-`;
-
-const ItemList = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  overflow-y: auto;
-  padding-bottom: 16px;
-`;
-
-const ItemRow = styled.div`
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-`;
-
-const ItemQty = styled.div`
-  width: 28px;
-  flex-shrink: 0;
-  padding-top: 2px;
-`;
-
-const ItemContent = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
-
-const ItemPriceEdit = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
-`;
-
-const SidePanel = styled.div`
-  width: 260px;
-  min-width: 260px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-`;
-
-const SidePanelCard = styled.div`
-  background: #f8f8f8;
-  border-radius: 16px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-`;
-
-const SidePanelRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-`;
-
-const TagRow = styled.div`
-  display: flex;
-  gap: 8px;
-`;
-
-const TagPill = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-  background: #fff;
-`;
-
-const OverlayFooter = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  border-top: 1px solid #e9e9e9;
-`;
-
-const FooterLeft = styled.div`
-  display: flex;
-  gap: 8px;
-`;
-
-const FooterRight = styled.div`
-  display: flex;
-  gap: 12px;
-`;
-
-const ManageButton = styled.div`
-  & > button {
-    border-color: #181818 !important;
-  }
-`;
-
-const NavBar = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 64px;
-  padding: 8px 0 6px;
-  border-top: 1px solid #f1f1f1;
-  color: #aaa;
-  font-size: 18px;
-`;
-
 // ============================================================================
 // DATA
 // ============================================================================
@@ -472,7 +295,7 @@ export function OrdersHomeDemo() {
         <MenuBtn>
           <IconButton
             iconType={IconType.Menu}
-            size={IconButtonSize.xLarge}
+            size={IconButtonSize.large}
             type={IconButtonType.tertiary}
             accessibilityLabel="Menu"
           />

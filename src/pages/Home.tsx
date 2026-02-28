@@ -59,7 +59,7 @@ const SidebarItem = styled.button<{ $isActive: boolean }>`
     props.$isActive ? IconColor.background.default : "transparent"};
 
   &:hover {
-    background-color: ${IconColor.background.hover};
+    background-color: ${IconColor.background.hovered};
   }
 `;
 
@@ -111,7 +111,7 @@ const SpecCard = styled.div`
 
 const SpecCardHeader = styled.div`
   padding: ${Spacing.small} ${Spacing.medium};
-  background-color: ${IconColor.background.hover};
+  background-color: ${IconColor.background.hovered};
 `;
 
 const SpecRow = styled.div`
@@ -231,7 +231,7 @@ export const Home = () => {
       <Sidebar>
         <SidebarHeader>
           <StackChildren size={Spacing.xxSmall}>
-            <Text textStyle={TextStyle.title.small}>ULOM Animation Demo</Text>
+            <Text textStyle={TextStyle.title.medium}>ULOM Animation Demo</Text>
             <Text textStyle={TextStyle.body.small.default} color={TextColor.text.subdued.default}>
               Questions? @Oliver on Slack
             </Text>
