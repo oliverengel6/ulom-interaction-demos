@@ -11,7 +11,7 @@ import { BrowserRouter } from "react-router";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <PrismWebGlobalStyles />
+    <PrismWebGlobalStyles fontsToAdd={["Legacy", "WoltMerchant", "DeliverooMerchant"]} />
     <PrismConfig>
       <Theming>
         <LayerManager>

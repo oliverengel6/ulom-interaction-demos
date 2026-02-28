@@ -16,7 +16,7 @@ import {
 const DeviceFrame = styled.div`
   position: relative;
   width: 100%;
-  max-width: 1024px;
+  max-width: 740px;
   background: #fff;
   border-radius: ${Theme.usage.borderRadius.large};
   overflow: hidden;
@@ -235,6 +235,57 @@ const Overlay = styled.div`
   animation: ${overlayScaleIn} 250ms cubic-bezier(0.2, 0, 0, 1);
 `;
 
+const DetailFooter = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+`;
+
+const DetailIconBtn = styled.div`
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #f1f1f1;
+  flex-shrink: 0;
+`;
+
+const DetailOutlineBtn = styled.div`
+  height: 44px;
+  width: 120px;
+  border-radius: 9999px;
+  background: #f1f1f1;
+  flex-shrink: 0;
+`;
+
+const DetailFilledBtn = styled.div`
+  height: 44px;
+  width: 224px;
+  border-radius: 9999px;
+  background: #181818;
+  flex-shrink: 0;
+`;
+
+const DetailHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+`;
+
+const DetailBody = styled.div`
+  flex: 1;
+  display: flex;
+  padding: 0 16px 16px;
+`;
+
+const DetailPlaceholderBox = styled.div`
+  width: 45%;
+  margin-left: auto;
+  background: #f5f5f5;
+  border-radius: 16px;
+`;
+
 // ============================================================================
 // DATA
 // ============================================================================
@@ -261,7 +312,7 @@ function OrderDetailOverlay({ onClose }: { onClose: () => void }) {
   return (
     <Scrim onClick={onClose}>
       <Overlay onClick={(e) => e.stopPropagation()}>
-        <div style={{ padding: 12 }}>
+        <DetailHeader>
           <IconButton
             iconType={IconType.Close}
             size={IconButtonSize.medium}
@@ -269,7 +320,17 @@ function OrderDetailOverlay({ onClose }: { onClose: () => void }) {
             accessibilityLabel="Close"
             onClick={onClose}
           />
-        </div>
+        </DetailHeader>
+        <DetailBody>
+          <DetailPlaceholderBox />
+        </DetailBody>
+        <DetailFooter>
+          <DetailIconBtn />
+          <DetailIconBtn />
+          <div style={{ flex: 1 }} />
+          <DetailOutlineBtn />
+          <DetailFilledBtn />
+        </DetailFooter>
       </Overlay>
     </Scrim>
   );
@@ -288,7 +349,6 @@ export function OrdersHomeDemo() {
     <DeviceFrame>
       <TopBar>
         <span>11:30 AM</span>
-        <span style={{ color: "#6c6c6c" }}>BT · WiFi · 5G · 100%</span>
       </TopBar>
 
       <PageHeader>

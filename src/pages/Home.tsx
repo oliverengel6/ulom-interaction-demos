@@ -11,8 +11,14 @@ import {
   TextStyle,
   TextColor,
   Theme,
+  Theming,
+  MerchantThemeCollection,
+  WoltMerchantThemeCollection,
+  DeliverooMerchantThemeCollection,
 } from "@doordash/prism-react";
 import { OrdersHomeDemo } from "./OrdersHome";
+import { SubtleAlertsDemo } from "./SubtleAlerts";
+import { FullScreenAlertsDemo } from "./FullScreenAlerts";
 
 // ============================================================================
 // LAYOUT
@@ -25,11 +31,17 @@ const PageContainer = styled.div`
 `;
 
 const Sidebar = styled.nav`
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
   width: 260px;
-  min-width: 260px;
   border-right: 1px solid ${IconColor.border.default};
   display: flex;
   flex-direction: column;
+  background-color: #fff;
+  z-index: 5;
+  overflow-y: auto;
 `;
 
 const SidebarHeader = styled.div`
@@ -65,6 +77,7 @@ const SidebarItem = styled.button<{ $isActive: boolean }>`
 
 const MainContent = styled.main`
   flex: 1;
+  margin-left: 260px;
   padding: ${Spacing.xLarge} 48px;
   min-width: 0;
 `;
@@ -75,13 +88,24 @@ const MainContent = styled.main`
 
 const DemoArea = styled.div`
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
   min-height: 200px;
   border: 1px solid ${IconColor.border.default};
   border-radius: ${Theme.usage.borderRadius.large};
   padding: ${Spacing.xLarge};
   overflow-x: auto;
+`;
+
+const DemoContent = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+`;
+
+const InstructionHint = styled.div`
+  padding-top: ${Spacing.medium};
 `;
 
 // ============================================================================
@@ -129,6 +153,116 @@ const SpecValue = styled.span`
 `;
 
 // ============================================================================
+// THEME SWITCHER
+// ============================================================================
+
+const DoorDashLogo = () => (
+  <svg width="20" height="20" viewBox="0 0 100 100" fill="none">
+    <rect width="100" height="100" rx="22" fill="#FF3008" />
+    <path d="M72.5 38.2H32.8C30 38.2 27.6 40.3 27.3 43.1C26.4 51 29.1 59.3 34.9 65.1C40.7 70.9 49 73.6 56.9 72.7C59.7 72.4 61.8 70 61.8 67.2V51.3H72.5C78 51.3 82.5 46.8 82.5 41.3V48.2C82.5 42.7 78 38.2 72.5 38.2ZM72.5 46.8H66.3V41.3H72.5C73.7 41.3 74.7 42.3 74.7 43.5V44.6C74.7 45.8 73.7 46.8 72.5 46.8Z" fill="white" />
+  </svg>
+);
+
+const WoltLogo = () => (
+  <svg width="20" height="20" viewBox="0 0 100 100" fill="none">
+    <rect width="100" height="100" rx="22" fill="#009DE0" />
+    <path d="M25 65L35 35H42L47 55L52 35H59L64 55L69 35H76L66 65H59L54 45L49 65H42L25 65Z" fill="white" />
+  </svg>
+);
+
+const DeliverooLogo = () => (
+  <svg width="20" height="20" viewBox="0 0 100 100" fill="none">
+    <rect width="100" height="100" rx="22" fill="#00CCBC" />
+    <path d="M50 28C38.95 28 30 36.95 30 48C30 59.05 38.95 68 50 68C55.1 68 59.7 66.1 63.2 63L57.8 57.6C55.7 59.3 53 60.3 50 60.3C43.2 60.3 37.7 54.8 37.7 48C37.7 41.2 43.2 35.7 50 35.7C53 35.7 55.7 36.7 57.8 38.4L63.2 33C59.7 29.9 55.1 28 50 28Z" fill="white" />
+  </svg>
+);
+
+interface ThemeOption {
+  id: string;
+  label: string;
+  collection: typeof MerchantThemeCollection;
+  logo: () => JSX.Element;
+}
+
+const themeOptions: ThemeOption[] = [
+  { id: "doordash", label: "DoorDash", collection: MerchantThemeCollection, logo: DoorDashLogo },
+  { id: "wolt", label: "Wolt", collection: WoltMerchantThemeCollection, logo: WoltLogo },
+  { id: "deliveroo", label: "Deliveroo", collection: DeliverooMerchantThemeCollection, logo: DeliverooLogo },
+];
+
+const SidebarFooter = styled.div`
+  margin-top: auto;
+  padding: ${Spacing.medium};
+  border-top: 1px solid ${IconColor.border.default};
+  position: sticky;
+  bottom: 0;
+  background-color: #fff;
+`;
+
+const ThemeDropdownWrapper = styled.div`
+  position: relative;
+`;
+
+const ThemeDropdownButton = styled.button`
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: ${Spacing.small};
+  width: 100%;
+  padding: ${Spacing.small} ${Spacing.medium};
+  border-radius: ${Theme.usage.borderRadius.medium};
+  border: 1px solid ${IconColor.border.default};
+  box-sizing: border-box;
+
+  &:hover {
+    background-color: ${IconColor.background.hovered};
+  }
+`;
+
+const ThemeDropdownChevron = styled.span<{ $isOpen: boolean }>`
+  margin-left: auto;
+  display: inline-flex;
+  transform: ${(props) => (props.$isOpen ? "rotate(180deg)" : "rotate(0deg)")};
+  transition: transform 150ms ease;
+  font-size: 10px;
+  color: ${TextColor.text.subdued.default};
+`;
+
+const ThemeDropdownMenu = styled.div`
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid ${IconColor.border.default};
+  border-radius: ${Theme.usage.borderRadius.medium};
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  z-index: 10;
+`;
+
+const ThemeDropdownItem = styled.button<{ $isActive: boolean }>`
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: ${Spacing.small};
+  width: 100%;
+  padding: ${Spacing.small} ${Spacing.medium};
+  box-sizing: border-box;
+  background-color: ${(props) => (props.$isActive ? IconColor.background.hovered : "transparent")};
+
+  &:hover {
+    background-color: ${IconColor.background.hovered};
+  }
+`;
+
+const ThemeLabel = styled.div`
+  padding-bottom: ${Spacing.xSmall};
+`;
+
+// ============================================================================
 // DATA
 // ============================================================================
 
@@ -146,6 +280,7 @@ interface Demo {
   id: string;
   label: string;
   description: string;
+  instruction: string;
   specs: SpecGroup[];
 }
 
@@ -155,6 +290,7 @@ const demos: Demo[] = [
     label: "Loader button",
     description:
       'This loading button is used for actions like "Ready for pickup" and "Picked up by Dasher" to enable Mx to cancel the action if performed by mistake.',
+    instruction: "Click to trigger, click again to cancel",
     specs: [
       {
         title: "Loading bar",
@@ -185,6 +321,7 @@ const demos: Demo[] = [
     label: "Order details transitions",
     description:
       "Transitions for opening and closing the full-screen order details view.",
+    instruction: "Tap a card to open, tap ✕ or scrim to close",
     specs: [
       {
         title: "Order detail — open",
@@ -214,6 +351,85 @@ const demos: Demo[] = [
       },
     ],
   },
+  {
+    id: "subtle-alerts",
+    label: "Subtle alerts",
+    description:
+      "A non-blocking banner that slides in from the top to notify of new orders.",
+    instruction: "",
+    specs: [
+      {
+        title: "Alert — slide in",
+        specs: [
+          { label: "Duration", value: "350ms" },
+          { label: "Easing", value: "cubic-bezier(0.2, 0, 0, 1)" },
+          { label: "Transform", value: "translateY(-100%) → 0" },
+          { label: "Opacity", value: "0 → 1" },
+        ],
+      },
+      {
+        title: "Alert — slide out",
+        specs: [
+          { label: "Duration", value: "250ms" },
+          { label: "Easing", value: "Ease in" },
+          { label: "Transform", value: "0 → translateY(-100%)" },
+          { label: "Opacity", value: "1 → 0" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "full-screen-alerts",
+    label: "Full screen alerts",
+    description:
+      "A full-screen takeover alert for high-priority notifications like new orders.",
+    instruction: "",
+    specs: [
+      {
+        title: "Overlay — fade in",
+        specs: [
+          { label: "Duration", value: "300ms" },
+          { label: "Easing", value: "Ease out" },
+          { label: "Opacity", value: "0 → 1" },
+        ],
+      },
+      {
+        title: "Badge — scale in",
+        specs: [
+          { label: "Duration", value: "400ms" },
+          { label: "Easing", value: "cubic-bezier(0.2, 0, 0, 1)" },
+          { label: "Scale", value: "0.5 → 1" },
+        ],
+      },
+      {
+        title: "Badge — pulse + ripple",
+        specs: [
+          { label: "Duration", value: "1800ms" },
+          { label: "Easing", value: "Ease in-out" },
+          { label: "Loop", value: "Infinite" },
+          { label: "Scale", value: "1 → 1.08 → 1" },
+          { label: "Ring scale", value: "1 → 2.2" },
+        ],
+      },
+      {
+        title: "Text — slide up",
+        specs: [
+          { label: "Duration", value: "350ms" },
+          { label: "Easing", value: "Ease out" },
+          { label: "Delay (title)", value: "150ms" },
+          { label: "Delay (subtitle)", value: "250ms" },
+        ],
+      },
+      {
+        title: "Overlay — fade out",
+        specs: [
+          { label: "Duration", value: "200ms" },
+          { label: "Easing", value: "Ease in" },
+          { label: "Opacity", value: "1 → 0" },
+        ],
+      },
+    ],
+  },
 ];
 
 // ============================================================================
@@ -223,8 +439,22 @@ const demos: Demo[] = [
 export const Home = () => {
   const [activeDemo, setActiveDemo] = useState(demos[0].id);
   const [showSpecs, setShowSpecs] = useState(true);
+  const [activeThemeId, setActiveThemeId] = useState("doordash");
+  const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const currentDemo = demos.find((d) => d.id === activeDemo)!;
+  const currentTheme = themeOptions.find((t) => t.id === activeThemeId)!;
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setThemeDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <PageContainer>
@@ -233,7 +463,7 @@ export const Home = () => {
           <StackChildren size={Spacing.xxSmall}>
             <Text textStyle={TextStyle.title.medium}>ULOM Animation Demo</Text>
             <Text textStyle={TextStyle.body.small.default} color={TextColor.text.subdued.default}>
-              Questions? @Oliver on Slack
+              Questions? @<a href="https://doordash.enterprise.slack.com/team/U073XBFAWUV" target="_blank" rel="noopener noreferrer" style={{ color: "inherit" }}>Oliver</a> on Slack
             </Text>
           </StackChildren>
         </SidebarHeader>
@@ -262,6 +492,38 @@ export const Home = () => {
             </SidebarItem>
           ))}
         </SidebarBody>
+
+        <SidebarFooter>
+          <ThemeLabel>
+            <Text textStyle={TextStyle.label.small.strong} color={TextColor.text.subdued.default}>
+              THEME
+            </Text>
+          </ThemeLabel>
+          <ThemeDropdownWrapper ref={dropdownRef}>
+            <ThemeDropdownButton onClick={() => setThemeDropdownOpen(!themeDropdownOpen)}>
+              <currentTheme.logo />
+              <Text textStyle={TextStyle.label.medium.default}>{currentTheme.label}</Text>
+              <ThemeDropdownChevron $isOpen={themeDropdownOpen}>▼</ThemeDropdownChevron>
+            </ThemeDropdownButton>
+            {themeDropdownOpen && (
+              <ThemeDropdownMenu>
+                {themeOptions.map((opt) => (
+                  <ThemeDropdownItem
+                    key={opt.id}
+                    $isActive={activeThemeId === opt.id}
+                    onClick={() => {
+                      setActiveThemeId(opt.id);
+                      setThemeDropdownOpen(false);
+                    }}
+                  >
+                    <opt.logo />
+                    <Text textStyle={TextStyle.label.medium.default}>{opt.label}</Text>
+                  </ThemeDropdownItem>
+                ))}
+              </ThemeDropdownMenu>
+            )}
+          </ThemeDropdownWrapper>
+        </SidebarFooter>
       </Sidebar>
 
       <MainContent>
@@ -274,8 +536,19 @@ export const Home = () => {
           </StackChildren>
 
           <DemoArea>
-            {activeDemo === "loader-button" && <LoaderButtonDemo />}
-            {activeDemo === "orders-home" && <OrdersHomeDemo />}
+            <Theming theme={currentTheme.collection}>
+              <DemoContent>
+                {activeDemo === "loader-button" && <LoaderButtonDemo />}
+                {activeDemo === "orders-home" && <OrdersHomeDemo />}
+                {activeDemo === "subtle-alerts" && <SubtleAlertsDemo />}
+                {activeDemo === "full-screen-alerts" && <FullScreenAlertsDemo themeId={activeThemeId} />}
+              </DemoContent>
+            </Theming>
+            <InstructionHint>
+              <Text textStyle={TextStyle.body.small.default} color={TextColor.text.subdued.default}>
+                {currentDemo.instruction}
+              </Text>
+            </InstructionHint>
           </DemoArea>
 
           <StackChildren size={Spacing.medium}>

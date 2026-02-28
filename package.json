@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@doordash/prism-react": "^9.27.0",
+    "@doordash/prism-react": "^9.29.19",
     "framer-motion": "^6.5.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
