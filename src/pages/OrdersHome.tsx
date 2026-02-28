@@ -339,7 +339,6 @@ function OrderDetailOverlay({ onClose }: { onClose: () => void }) {
 export function OrdersHomeDemo() {
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
   const [bouncingCard, setBouncingCard] = useState<string | null>(null);
-
   const handleClose = useCallback(() => {
     setBouncingCard(selectedOrder);
     setSelectedOrder(null);

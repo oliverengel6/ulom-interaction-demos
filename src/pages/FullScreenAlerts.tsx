@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import styled, { keyframes } from "styled-components";
 import {
   Button,
@@ -378,24 +378,24 @@ const overlayScaleIn = keyframes`
   to   { transform: scale(1); opacity: 1; }
 `;
 
-const DetailScrim = styled.div`
+const DetailScrim = styled.div<{ $skipEntrance?: boolean }>`
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: 10;
   display: flex;
   padding: 12px;
-  animation: ${scrimFadeIn} 200ms ease-out;
+  animation: ${(props) => (props.$skipEntrance ? "none" : scrimFadeIn)} 200ms ease-out;
 `;
 
-const DetailPanel = styled.div`
+const DetailPanel = styled.div<{ $skipEntrance?: boolean }>`
   flex: 1;
   background: #fff;
   border-radius: 16px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: ${overlayScaleIn} 250ms cubic-bezier(0.2, 0, 0, 1);
+  animation: ${(props) => (props.$skipEntrance ? "none" : overlayScaleIn)} 250ms cubic-bezier(0.2, 0, 0, 1);
 `;
 
 const DetailHeader = styled.div`
@@ -483,10 +483,10 @@ const alertTypes: AlertType[] = [
 // COMPONENT
 // ============================================================================
 
-function OrderDetailOverlay({ onClose }: { onClose: () => void }) {
+function OrderDetailOverlay({ onClose, skipEntrance }: { onClose: () => void; skipEntrance?: boolean }) {
   return (
-    <DetailScrim onClick={onClose}>
-      <DetailPanel onClick={(e) => e.stopPropagation()}>
+    <DetailScrim onClick={onClose} $skipEntrance={skipEntrance}>
+      <DetailPanel onClick={(e) => e.stopPropagation()} $skipEntrance={skipEntrance}>
         <DetailHeader>
           <IconButton
             iconType={IconType.Close}
@@ -511,35 +511,38 @@ function OrderDetailOverlay({ onClose }: { onClose: () => void }) {
   );
 }
 
+const FADE_OUT_MS = 200;
+
 function FullScreenAlert({ alert, onDismiss, onView, themeId }: { alert: AlertType; onDismiss: () => void; onView: () => void; themeId?: string }) {
   const [dismissing, setDismissing] = useState(false);
-  const viewingRef = { current: false };
+  const dismissedRef = useRef(false);
 
-  const handleDismiss = useCallback(() => {
+  const dismiss = useCallback(() => {
+    if (dismissedRef.current) return;
+    dismissedRef.current = true;
     setDismissing(true);
-  }, []);
+    setTimeout(onDismiss, FADE_OUT_MS);
+  }, [onDismiss]);
 
   const handleView = useCallback(() => {
-    viewingRef.current = true;
+    if (dismissedRef.current) return;
+    dismissedRef.current = true;
+    onView();
     setDismissing(true);
-  }, []);
+    setTimeout(onDismiss, FADE_OUT_MS);
+  }, [onDismiss, onView]);
 
   return (
     <FullScreenOverlay
       $dismissing={dismissing}
       $color={alert.color}
-      onAnimationEnd={() => {
-        if (dismissing) {
-          onDismiss();
-          if (viewingRef.current) onView();
-        }
-      }}
-      onClick={handleDismiss}
+      onClick={handleView}
+      style={{ cursor: "pointer" }}
     >
-      <CloseBtn onClick={(e) => { e.stopPropagation(); handleDismiss(); }} aria-label="Close">
+      <CloseBtn onClick={(e) => { e.stopPropagation(); dismiss(); }} aria-label="Close">
         ✕
       </CloseBtn>
-      <FullScreenContent onClick={(e) => { e.stopPropagation(); handleView(); }} style={{ cursor: "pointer" }}>
+      <FullScreenContent>
         <LargeBadgeWrapper>
           <LargeBadge $color={alert.color} $themeId={themeId}>1</LargeBadge>
         </LargeBadgeWrapper>
@@ -554,9 +557,9 @@ function FullScreenAlert({ alert, onDismiss, onView, themeId }: { alert: AlertTy
 export function FullScreenAlertsDemo({ themeId }: { themeId?: string }) {
   const [showAlert, setShowAlert] = useState(true);
   const [showOrderDetail, setShowOrderDetail] = useState(false);
+  const [openedFromAlert, setOpenedFromAlert] = useState(false);
   const [selectedAlertId, setSelectedAlertId] = useState(alertTypes[0].id);
   const selectedAlert = alertTypes.find((a) => a.id === selectedAlertId)!;
-
   return (
     <Wrapper>
       <DeviceFrame>
@@ -622,14 +625,17 @@ export function FullScreenAlertsDemo({ themeId }: { themeId?: string }) {
         </CardStack>
 
         {showOrderDetail && (
-          <OrderDetailOverlay onClose={() => setShowOrderDetail(false)} />
+          <OrderDetailOverlay
+            onClose={() => { setShowOrderDetail(false); setOpenedFromAlert(false); }}
+            skipEntrance={openedFromAlert}
+          />
         )}
 
         {showAlert && (
           <FullScreenAlert
             alert={selectedAlert}
             onDismiss={() => setShowAlert(false)}
-            onView={() => setShowOrderDetail(true)}
+            onView={() => { setOpenedFromAlert(true); setShowOrderDetail(true); }}
             themeId={themeId}
           />
         )}

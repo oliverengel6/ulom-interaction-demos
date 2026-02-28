@@ -157,23 +157,29 @@ const SpecValue = styled.span`
 // ============================================================================
 
 const DoorDashLogo = () => (
-  <svg width="20" height="20" viewBox="0 0 100 100" fill="none">
-    <rect width="100" height="100" rx="22" fill="#FF3008" />
-    <path d="M72.5 38.2H32.8C30 38.2 27.6 40.3 27.3 43.1C26.4 51 29.1 59.3 34.9 65.1C40.7 70.9 49 73.6 56.9 72.7C59.7 72.4 61.8 70 61.8 67.2V51.3H72.5C78 51.3 82.5 46.8 82.5 41.3V48.2C82.5 42.7 78 38.2 72.5 38.2ZM72.5 46.8H66.3V41.3H72.5C73.7 41.3 74.7 42.3 74.7 43.5V44.6C74.7 45.8 73.7 46.8 72.5 46.8Z" fill="white" />
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <rect width="24" height="24" rx="5.3" fill="#FF3008" />
+    <path d="M19.55 9.533a5.078 5.078 0 00-4.42-2.656H4.512a.43.43 0 00-.307.737l2.65 2.667c.228.228.52.35.83.334h8.089a1.04 1.04 0 010 2.08h-5.56a.43.43 0 00-.306.737l2.65 2.667a1.2 1.2 0 00.844.301h2.532c3.276 0 5.748-3.506 3.617-6.867z" fill="white" />
   </svg>
 );
 
 const WoltLogo = () => (
-  <svg width="20" height="20" viewBox="0 0 100 100" fill="none">
-    <rect width="100" height="100" rx="22" fill="#009DE0" />
-    <path d="M25 65L35 35H42L47 55L52 35H59L64 55L69 35H76L66 65H59L54 45L49 65H42L25 65Z" fill="white" />
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <defs>
+      <linearGradient id="woltGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#55C4F0" />
+        <stop offset="100%" stopColor="#009DE0" />
+      </linearGradient>
+    </defs>
+    <rect width="24" height="24" rx="5.3" fill="url(#woltGrad)" />
+    <text x="12" y="16" textAnchor="middle" fill="white" fontSize="11" fontWeight="600" fontFamily="Omnes, 'Nunito', 'Varela Round', sans-serif" letterSpacing="-0.5">Wolt</text>
   </svg>
 );
 
 const DeliverooLogo = () => (
-  <svg width="20" height="20" viewBox="0 0 100 100" fill="none">
-    <rect width="100" height="100" rx="22" fill="#00CCBC" />
-    <path d="M50 28C38.95 28 30 36.95 30 48C30 59.05 38.95 68 50 68C55.1 68 59.7 66.1 63.2 63L57.8 57.6C55.7 59.3 53 60.3 50 60.3C43.2 60.3 37.7 54.8 37.7 48C37.7 41.2 43.2 35.7 50 35.7C53 35.7 55.7 36.7 57.8 38.4L63.2 33C59.7 29.9 55.1 28 50 28Z" fill="white" />
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <rect width="24" height="24" rx="5.3" fill="#00CCBC" />
+    <path d="M15.489 3l-.845 7.938-1.443-5.943-4.524.949 1.443 6.692-6.521 1.366 1.15 5.345L16.374 21l2.624-5.808L17.746 3.477 15.489 3zm-4.102 10.208a.566.566 0 01.241.049c.156.07.42.218.473.444.077.326.003.599-.234.813v.002c-.236.213-.549.194-.88.085-.331-.109-.478-.504-.353-.982.093-.355.533-.408.753-.412zm3.107.411c.335-.009.624.14.787.407.163.268.08.563-.091.857h-.002c-.172.294-.623.334-1.067.12-.299-.145-.298-.513-.265-.737a.691.691 0 01.145-.335c.106-.133.286-.306.492-.312z" fill="white" />
   </svg>
 );
 

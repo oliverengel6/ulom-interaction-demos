@@ -550,7 +550,6 @@ export function SubtleAlertsDemo() {
   const selectedAlert = alertTypes.find((a) => a.id === selectedAlertId)!;
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
   const [bouncingCard, setBouncingCard] = useState<string | null>(null);
-
   const handleOverlayClose = useCallback(() => {
     setBouncingCard(selectedOrder);
     setSelectedOrder(null);
