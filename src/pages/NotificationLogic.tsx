@@ -101,40 +101,6 @@ const ForkBranch = styled.div<{ $position: "left" | "right" | "middle" }>`
   }
 `;
 
-const ForkDrop = styled.div`
-  width: 2px;
-  height: 20px;
-  background: #E9E9E9;
-  position: relative;
-  margin: 0 0 10px;
-
-  &::after {
-    content: "";
-    position: absolute;
-    bottom: -4px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 0;
-    border-left: 4px solid transparent;
-    border-right: 4px solid transparent;
-    border-top: 5px solid #E9E9E9;
-  }
-`;
-
-const SplitContainer = styled.div`
-  display: flex;
-  gap: ${Spacing.medium};
-  align-items: flex-start;
-`;
-
-const SplitBranch = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
-  min-width: 160px;
-`;
 
 const ResultNode = styled.div`
   display: flex;
@@ -146,10 +112,6 @@ const ResultNode = styled.div`
   background: ${Theme.usage.color.background.inverse.default};
   text-align: center;
   min-width: 220px;
-`;
-
-const StepLabel = styled.div`
-  margin: 4px 0;
 `;
 
 const DecisionNode = styled.div`

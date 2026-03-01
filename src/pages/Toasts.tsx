@@ -511,7 +511,7 @@ function Toast({
           <ToastIcon>
             <Icon
               type={toast.iconType as any}
-              color={toast.iconColor || IconColor.icon.default}
+              color={(toast.iconColor || IconColor.icon.default) as any}
             />
           </ToastIcon>
         )}
@@ -530,7 +530,7 @@ let toastCounter = 0;
 export function ToastsDemo() {
   const [toasts, setToasts] = useState<ToastData[]>([]);
   const [showAlert, setShowAlert] = useState(false);
-  const timersRef = useRef<Record<string, NodeJS.Timeout>>({});
+  const timersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const addToast = useCallback((toast: Omit<ToastData, "id">) => {
     const id = `toast-${++toastCounter}`;

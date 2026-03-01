@@ -308,10 +308,6 @@ const alertSlideOut = keyframes`
   to   { transform: translateY(-100%); opacity: 0; }
 `;
 
-const alertPromote = keyframes`
-  from { transform: scale(0.92); opacity: 0.6; }
-  to   { transform: scale(1); opacity: 1; }
-`;
 
 const AlertContainer = styled.div`
   position: absolute;
@@ -573,7 +569,7 @@ function SubtleAlert({
             <AlertBadge $color={alert.color}>
               {alert.badgeIcon ? (
                 <div style={{ width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                  <Icon type={alert.badgeIcon} size={20} />
+                  <Icon type={alert.badgeIcon as any} size={20 as any} />
                 </div>
               ) : (
                 "1"
