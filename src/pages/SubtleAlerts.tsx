@@ -517,6 +517,7 @@ const alertTypes: AlertType[] = [
   { id: "canceled", label: "Canceled order", title: "Canceled order", subtitle: "$25.30 · 4 items", color: "#B71000" },
   { id: "customer-message", label: "New customer message", title: "New customer message", subtitle: "Emma E · #123ABC", color: "#313131", badgeIcon: IconType.ChatDefaultLine },
   { id: "support-message", label: "New Support message", title: "New Support message", subtitle: "Emma E · #123ABC", color: "#313131", badgeIcon: IconType.ChatHelp },
+  { id: "dasher-arriving", label: "Dasher arriving", title: "Dasher arriving", subtitle: "Emma E · #123ABC", color: "#A36500" },
 ];
 
 // ============================================================================

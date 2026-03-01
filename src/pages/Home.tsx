@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useParams, useNavigate } from "react-router";
+import { useParams, useNavigate, Link } from "react-router";
 import styled, { keyframes, css } from "styled-components";
 import {
   Button,
@@ -28,6 +28,7 @@ import { NavMenuDemo } from "./NavMenu";
 import { ToastsDemo } from "./Toasts";
 import { OrderSortingDiagram } from "./OrderSorting";
 import { NotificationLogicDiagram } from "./NotificationLogic";
+import { CanceledOrdersDiagram } from "./CanceledOrders";
 
 // ============================================================================
 // LAYOUT
@@ -253,6 +254,22 @@ const WipBadge = styled.span`
   flex-shrink: 0;
 `;
 
+const LegacyBadge = styled.span<{ $short?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: ${Theme.usage.borderRadius.full};
+  background: #F0E6FF;
+  color: #9531FE;
+  font-family: "DD-TTNorms", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  line-height: 16px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+`;
+
 // ============================================================================
 // THEME SWITCHER
 // ============================================================================
@@ -386,10 +403,11 @@ interface SpecGroup {
 interface Demo {
   id: string;
   label: string;
-  description: string;
+  description: React.ReactNode;
   instruction: string;
   specs: SpecGroup[];
   wip?: boolean;
+  legacy?: boolean;
 }
 
 const demos: Demo[] = [
@@ -470,8 +488,7 @@ const demos: Demo[] = [
   {
     id: "subtle-alerts",
     label: "Subtle alerts",
-    description:
-      "A non-blocking banner that slides in from the top to surface timely updates.",
+    description: <>A non-blocking banner that slides in from the top to surface timely updates. See <Link to="/notification-logic" style={{ color: "inherit" }}>notification logic</Link> for when to use subtle vs. full screen alerts.</>,
     instruction: "",
     specs: [
       {
@@ -497,8 +514,7 @@ const demos: Demo[] = [
   {
     id: "full-screen-alerts",
     label: "Full screen alerts",
-    description:
-      "A full-screen takeover alert for high-priority notifications like new orders.",
+    description: <>A full-screen takeover alert for high-priority notifications like new orders. See <Link to="/notification-logic" style={{ color: "inherit" }}>notification logic</Link> for when to use subtle vs. full screen alerts.</>,
     instruction: "",
     specs: [
       {
@@ -633,6 +649,15 @@ const behaviors: Demo[] = [
     specs: [],
     wip: true,
   },
+  {
+    id: "canceled-orders",
+    label: "Canceled orders",
+    description:
+      "How canceled orders are classified and whether the merchant is paid, based on order confirmation state and cancellation reason.",
+    instruction: "",
+    specs: [],
+    legacy: true,
+  },
 ];
 
 const allPages = [...demos, ...behaviors];
@@ -743,42 +768,12 @@ export const Home = () => {
                   {item.label}
                 </Text>
                 {item.wip && <WipBadge>WIP</WipBadge>}
+                {item.legacy && <LegacyBadge>LEG</LegacyBadge>}
               </span>
             </SidebarItem>
           ))}
         </SidebarBody>
 
-        <SidebarFooter>
-          <ThemeLabel>
-            <Text textStyle={TextStyle.label.small.strong} color={TextColor.text.subdued.default}>
-              THEME
-            </Text>
-          </ThemeLabel>
-          <ThemeDropdownWrapper ref={dropdownRef}>
-            <ThemeDropdownButton onClick={() => setThemeDropdownOpen(!themeDropdownOpen)}>
-              <currentTheme.logo />
-              <Text textStyle={TextStyle.label.medium.default}>{currentTheme.label}</Text>
-              <ThemeDropdownChevron $isOpen={themeDropdownOpen}>▼</ThemeDropdownChevron>
-            </ThemeDropdownButton>
-            {themeDropdownOpen && (
-              <ThemeDropdownMenu>
-                {themeOptions.map((opt) => (
-                  <ThemeDropdownItem
-                    key={opt.id}
-                    $isActive={activeThemeId === opt.id}
-                    onClick={() => {
-                      setActiveThemeId(opt.id);
-                      setThemeDropdownOpen(false);
-                    }}
-                  >
-                    <opt.logo />
-                    <Text textStyle={TextStyle.label.medium.default}>{opt.label}</Text>
-                  </ThemeDropdownItem>
-                ))}
-              </ThemeDropdownMenu>
-            )}
-          </ThemeDropdownWrapper>
-        </SidebarFooter>
       </Sidebar>
 
       <MainContent>
@@ -799,7 +794,8 @@ export const Home = () => {
             <MobileTopBarTitleText $visible={!pageTitleVisible}>
               <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <Text textStyle={TextStyle.label.medium.strong}>{currentDemo.label}</Text>
-                {currentDemo.wip && <WipBadge>WIP</WipBadge>}
+                {currentDemo.wip && <WipBadge>Work in progress</WipBadge>}
+                {currentDemo.legacy && <LegacyBadge>Legacy</LegacyBadge>}
               </span>
             </MobileTopBarTitleText>
           </MobileTopBarTitle>
@@ -809,7 +805,8 @@ export const Home = () => {
           <StackChildren size={Spacing.xSmall}>
             <span ref={pageTitleRef} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <Text textStyle={TextStyle.title.large}>{currentDemo.label}</Text>
-              {currentDemo.wip && <WipBadge>WIP</WipBadge>}
+              {currentDemo.wip && <WipBadge>Work in progress</WipBadge>}
+              {currentDemo.legacy && <LegacyBadge>Legacy</LegacyBadge>}
             </span>
             <Text textStyle={TextStyle.body.medium.default} color={TextColor.text.subdued.default}>
               {currentDemo.description}
@@ -827,6 +824,7 @@ export const Home = () => {
                 {activeDemo === "toasts" && <ToastsDemo />}
                 {activeDemo === "order-sorting" && <OrderSortingDiagram />}
                 {activeDemo === "notification-logic" && <NotificationLogicDiagram />}
+                {activeDemo === "canceled-orders" && <CanceledOrdersDiagram />}
               </DemoContent>
             </Theming>
             {currentDemo.instruction && (

@@ -485,6 +485,7 @@ const alertTypes: AlertType[] = [
   { id: "canceled", label: "Canceled order", title: "Canceled order", summary: "$25.30 · 4 items", subtitle: "Tap to view", color: "#B71000" },
   { id: "customer-message", label: "New customer message", title: "New customer message", summary: "Emma E · #123ABC", subtitle: "Tap to view", color: "#313131", badgeIcon: IconType.ChatDefaultLine },
   { id: "support-message", label: "New Support message", title: "New Support message", summary: "Emma E · #123ABC", subtitle: "Tap to view", color: "#313131", badgeIcon: IconType.ChatHelp },
+  { id: "dasher-arriving", label: "Dasher arriving", title: "Dasher arriving", summary: "Emma E · #123ABC", subtitle: "Tap to view", color: "#A36500" },
 ];
 
 // ============================================================================
