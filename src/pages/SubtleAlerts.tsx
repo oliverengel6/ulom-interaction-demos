@@ -759,6 +759,15 @@ export function SubtleAlertsDemo() {
             Trigger multiple
           </Button>
         </TriggerButton>
+        <TriggerButton>
+          <Button
+            type={ButtonType.tertiary}
+            size={ButtonSize.medium}
+            onClick={() => setAlertQueue([])}
+          >
+            Clear all
+          </Button>
+        </TriggerButton>
       </Controls>
     </Wrapper>
   );

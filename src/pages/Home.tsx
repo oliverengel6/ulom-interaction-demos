@@ -5,6 +5,10 @@ import {
   Button,
   ButtonType,
   ButtonSize,
+  IconButton,
+  IconButtonType,
+  IconButtonSize,
+  IconType,
   IconColor,
   Spacing,
   StackChildren,
@@ -29,13 +33,15 @@ import { NotificationLogicDiagram } from "./NotificationLogic";
 // LAYOUT
 // ============================================================================
 
+const MOBILE_BREAKPOINT = "1024px";
+
 const PageContainer = styled.div`
   display: flex;
   min-height: 100vh;
   background-color: #fff;
 `;
 
-const Sidebar = styled.nav`
+const Sidebar = styled.nav<{ $mobileOpen?: boolean }>`
   position: fixed;
   top: 0;
   left: 0;
@@ -45,8 +51,77 @@ const Sidebar = styled.nav`
   display: flex;
   flex-direction: column;
   background-color: #fff;
-  z-index: 5;
+  z-index: 110;
   overflow-y: auto;
+
+  @media (max-width: ${MOBILE_BREAKPOINT}) {
+    transform: ${(p) => (p.$mobileOpen ? "translateX(0)" : "translateX(-100%)")};
+    transition: transform 200ms ease;
+    box-shadow: ${(p) => (p.$mobileOpen ? "4px 0 24px rgba(0, 0, 0, 0.12)" : "none")};
+  }
+`;
+
+const MobileScrim = styled.div<{ $visible: boolean }>`
+  display: none;
+
+  @media (max-width: ${MOBILE_BREAKPOINT}) {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 105;
+    opacity: ${(p) => (p.$visible ? 1 : 0)};
+    pointer-events: ${(p) => (p.$visible ? "auto" : "none")};
+    transition: opacity 200ms ease;
+  }
+`;
+
+const MobileTopBar = styled.div`
+  display: none;
+
+  @media (max-width: ${MOBILE_BREAKPOINT}) {
+    display: flex;
+    align-items: center;
+    gap: ${Spacing.small};
+    padding: ${Spacing.small} ${Spacing.medium};
+    border-bottom: 1px solid ${IconColor.border.default};
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    z-index: 100;
+  }
+`;
+
+const MobileTopBarTitle = styled.div`
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 20px;
+  overflow: hidden;
+`;
+
+const MobileTopBarTitleText = styled.span<{ $visible: boolean }>`
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  opacity: ${(p) => (p.$visible ? 1 : 0)};
+  transform: translateY(${(p) => (p.$visible ? "0" : "8px")});
+  transition: opacity 200ms ease, transform 200ms ease;
+`;
+
+const MobileTopBarSpacer = styled.div`
+  display: none;
+
+  @media (max-width: ${MOBILE_BREAKPOINT}) {
+    display: block;
+    height: calc(52px + ${Spacing.xLarge});
+  }
 `;
 
 const SidebarHeader = styled.div`
@@ -85,6 +160,11 @@ const MainContent = styled.main`
   margin-left: 260px;
   padding: ${Spacing.xLarge} 48px;
   min-width: 0;
+
+  @media (max-width: ${MOBILE_BREAKPOINT}) {
+    margin-left: 0;
+    padding: ${Spacing.medium} ${Spacing.medium};
+  }
 `;
 
 // ============================================================================
@@ -570,7 +650,10 @@ export const Home = () => {
   const [showSpecs, setShowSpecs] = useState(true);
   const [activeThemeId, setActiveThemeId] = useState("doordash");
   const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [pageTitleVisible, setPageTitleVisible] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const pageTitleRef = useRef<HTMLSpanElement>(null);
 
   const currentDemo = allPages.find((d) => d.id === activeDemo)!;
   const currentTheme = themeOptions.find((t) => t.id === activeThemeId)!;
@@ -585,9 +668,26 @@ export const Home = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const el = pageTitleRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setPageTitleVisible(entry.isIntersecting),
+      { threshold: 0, rootMargin: "-80px 0px 0px 0px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [activeDemo]);
+
+  const handleNavClick = useCallback((id: string) => {
+    setActiveDemo(id);
+    setSidebarOpen(false);
+  }, [setActiveDemo]);
+
   return (
     <PageContainer>
-      <Sidebar>
+      <MobileScrim $visible={sidebarOpen} onClick={() => setSidebarOpen(false)} />
+      <Sidebar $mobileOpen={sidebarOpen}>
         <SidebarHeader>
           <StackChildren size={Spacing.xxSmall}>
             <Text textStyle={TextStyle.title.medium}><span style={{ opacity: 0.7 }}>ULOM</span><br />System Demos</Text>
@@ -607,7 +707,7 @@ export const Home = () => {
             <SidebarItem
               key={demo.id}
               $isActive={activeDemo === demo.id}
-              onClick={() => setActiveDemo(demo.id)}
+              onClick={() => handleNavClick(demo.id)}
             >
               <Text
                 textStyle={
@@ -630,7 +730,7 @@ export const Home = () => {
             <SidebarItem
               key={item.id}
               $isActive={activeDemo === item.id}
-              onClick={() => setActiveDemo(item.id)}
+              onClick={() => handleNavClick(item.id)}
             >
               <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <Text
@@ -682,9 +782,32 @@ export const Home = () => {
       </Sidebar>
 
       <MainContent>
+        <MobileTopBar>
+          <IconButton
+            iconType={IconType.Menu}
+            size={IconButtonSize.medium}
+            type={IconButtonType.tertiary}
+            accessibilityLabel="Open menu"
+            onClick={() => setSidebarOpen(true)}
+          />
+          <MobileTopBarTitle>
+            <MobileTopBarTitleText $visible={pageTitleVisible}>
+              <Text textStyle={TextStyle.label.medium.strong}>
+                <span style={{ opacity: 0.5 }}>ULOM</span> System Demos
+              </Text>
+            </MobileTopBarTitleText>
+            <MobileTopBarTitleText $visible={!pageTitleVisible}>
+              <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <Text textStyle={TextStyle.label.medium.strong}>{currentDemo.label}</Text>
+                {currentDemo.wip && <WipBadge>WIP</WipBadge>}
+              </span>
+            </MobileTopBarTitleText>
+          </MobileTopBarTitle>
+        </MobileTopBar>
+        <MobileTopBarSpacer />
         <StackChildren size={Spacing.large}>
           <StackChildren size={Spacing.xSmall}>
-            <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span ref={pageTitleRef} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <Text textStyle={TextStyle.title.large}>{currentDemo.label}</Text>
               {currentDemo.wip && <WipBadge>WIP</WipBadge>}
             </span>
