@@ -314,78 +314,6 @@ const themeOptions: ThemeOption[] = [
   { id: "deliveroo", label: "Deliveroo", collection: DeliverooMerchantThemeCollection, logo: DeliverooLogo },
 ];
 
-const SidebarFooter = styled.div`
-  margin-top: auto;
-  padding: ${Spacing.medium};
-  border-top: 1px solid ${IconColor.border.default};
-  position: sticky;
-  bottom: 0;
-  background-color: #fff;
-`;
-
-const ThemeDropdownWrapper = styled.div`
-  position: relative;
-`;
-
-const ThemeDropdownButton = styled.button`
-  all: unset;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: ${Spacing.small};
-  width: 100%;
-  padding: ${Spacing.small} ${Spacing.medium};
-  border-radius: ${Theme.usage.borderRadius.medium};
-  border: 1px solid ${IconColor.border.default};
-  box-sizing: border-box;
-
-  &:hover {
-    background-color: ${IconColor.background.hovered};
-  }
-`;
-
-const ThemeDropdownChevron = styled.span<{ $isOpen: boolean }>`
-  margin-left: auto;
-  display: inline-flex;
-  transform: ${(props) => (props.$isOpen ? "rotate(180deg)" : "rotate(0deg)")};
-  transition: transform 150ms ease;
-  font-size: 10px;
-  color: ${TextColor.text.subdued.default};
-`;
-
-const ThemeDropdownMenu = styled.div`
-  position: absolute;
-  bottom: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  background: white;
-  border: 1px solid ${IconColor.border.default};
-  border-radius: ${Theme.usage.borderRadius.medium};
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  z-index: 10;
-`;
-
-const ThemeDropdownItem = styled.button<{ $isActive: boolean }>`
-  all: unset;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: ${Spacing.small};
-  width: 100%;
-  padding: ${Spacing.small} ${Spacing.medium};
-  box-sizing: border-box;
-  background-color: ${(props) => (props.$isActive ? IconColor.background.hovered : "transparent")};
-
-  &:hover {
-    background-color: ${IconColor.background.hovered};
-  }
-`;
-
-const ThemeLabel = styled.div`
-  padding-bottom: ${Spacing.xSmall};
-`;
-
 // ============================================================================
 // DATA
 // ============================================================================
@@ -673,25 +601,13 @@ export const Home = () => {
   const setActiveDemo = useCallback((id: string) => navigate(`/${id}`), [navigate]);
 
   const [showSpecs, setShowSpecs] = useState(true);
-  const [activeThemeId, setActiveThemeId] = useState("doordash");
-  const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
+  const [activeThemeId] = useState("doordash");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pageTitleVisible, setPageTitleVisible] = useState(true);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const pageTitleRef = useRef<HTMLSpanElement>(null);
 
   const currentDemo = allPages.find((d) => d.id === activeDemo)!;
   const currentTheme = themeOptions.find((t) => t.id === activeThemeId)!;
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setThemeDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   useEffect(() => {
     const el = pageTitleRef.current;
