@@ -4,6 +4,7 @@ import {
   Button,
   ButtonType,
   ButtonSize,
+  Icon,
   IconButton,
   IconButtonType,
   IconButtonSize,
@@ -235,8 +236,8 @@ const FullScreenOverlay = styled.div<{ $dismissing: boolean; $color: string }>`
   align-items: center;
   justify-content: center;
   animation: ${(props) => (props.$dismissing ? alertFadeOut : alertFadeIn)}
-    ${(props) => (props.$dismissing ? "200ms" : "300ms")}
-    ${(props) => (props.$dismissing ? "ease-in" : "ease-out")}
+    ${(props) => (props.$dismissing ? Theme.usage.motion.duration.fade.long : Theme.usage.motion.duration.auto.default.xShort)}
+    ${(props) => (props.$dismissing ? Theme.usage.motion.easing.subtle.exit : Theme.usage.motion.easing.subtle.enter)}
     forwards;
 `;
 
@@ -255,7 +256,7 @@ const CloseBtn = styled.button`
   background: rgba(0, 0, 0, 0.15);
   color: #fff;
   font-size: 20px;
-  transition: background 150ms ease;
+  transition: background ${Theme.usage.motion.duration.fade.medium} ${Theme.usage.motion.easing.subtle.default};
 
   &:hover {
     background: rgba(0, 0, 0, 0.25);
@@ -288,7 +289,7 @@ const LargeBadgeWrapper = styled.div`
     inset: 0;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.55);
-    animation: ${ringExpand} 1.8s ease-out infinite;
+    animation: ${ringExpand} 1.8s ${Theme.usage.motion.easing.subtle.enter} infinite;
     animation-delay: 0.6s;
     pointer-events: none;
     opacity: 0;
@@ -309,7 +310,7 @@ const LargeBadge = styled.div<{ $color: string; $themeId?: string }>`
   font-family: ${(props) => brandFontMap[props.$themeId || "doordash"]} !important;
   position: relative;
   z-index: 1;
-  animation: ${badgePulse} 1.8s ease-in-out infinite;
+  animation: ${badgePulse} 1.8s ${Theme.usage.motion.easing.subtle.default} infinite;
 `;
 
 const AlertTitle = styled.div<{ $themeId?: string }>`
@@ -320,16 +321,20 @@ const AlertTitle = styled.div<{ $themeId?: string }>`
   font-family: ${(props) => brandFontMap[props.$themeId || "doordash"]} !important;
 `;
 
-const AlertSummary = styled.div`
+const AlertSummary = styled.div<{ $themeId?: string }>`
   font-size: 16px;
+  font-weight: 500;
   color: rgba(255, 255, 255, 0.8);
+  margin-top: -8px;
+  font-family: ${(props) => brandFontMap[props.$themeId || "doordash"]} !important;
 `;
 
-const AlertSubtitle = styled.div`
+const AlertSubtitle = styled.div<{ $themeId?: string }>`
   font-size: 16px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.7);
-  margin-top: 32px;
+  margin-top: 56px;
+  font-family: ${(props) => brandFontMap[props.$themeId || "doordash"]} !important;
 `;
 
 const Controls = styled.div`
@@ -385,7 +390,7 @@ const DetailScrim = styled.div<{ $skipEntrance?: boolean }>`
   z-index: 10;
   display: flex;
   padding: 12px;
-  animation: ${(props) => (props.$skipEntrance ? "none" : scrimFadeIn)} 200ms ease-out;
+  animation: ${(props) => (props.$skipEntrance ? "none" : scrimFadeIn)} ${Theme.usage.motion.duration.fade.long} ${Theme.usage.motion.easing.subtle.enter};
 `;
 
 const DetailPanel = styled.div<{ $skipEntrance?: boolean }>`
@@ -395,7 +400,7 @@ const DetailPanel = styled.div<{ $skipEntrance?: boolean }>`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: ${(props) => (props.$skipEntrance ? "none" : overlayScaleIn)} 250ms cubic-bezier(0.2, 0, 0, 1);
+  animation: ${(props) => (props.$skipEntrance ? "none" : overlayScaleIn)} ${Theme.usage.motion.duration.spring.out.short} ${Theme.usage.motion.easing.spring.out.default};
 `;
 
 const DetailHeader = styled.div`
@@ -471,12 +476,15 @@ interface AlertType {
   summary: string;
   subtitle: string;
   color: string;
+  badgeIcon?: string;
 }
 
 const alertTypes: AlertType[] = [
   { id: "new-order", label: "New order", title: "New order", summary: "$16.50 · 3 items", subtitle: "Tap to view", color: "#006a25" },
   { id: "auto-confirmed", label: "Auto-confirmed new order", title: "Order confirmed", summary: "$24.75 · 5 items", subtitle: "Tap to view", color: "#1537C7" },
   { id: "canceled", label: "Canceled order", title: "Canceled order", summary: "$25.30 · 4 items", subtitle: "Tap to view", color: "#B71000" },
+  { id: "customer-message", label: "New customer message", title: "New customer message", summary: "Emma E · #123ABC", subtitle: "Tap to view", color: "#313131", badgeIcon: IconType.ChatDefaultLine },
+  { id: "support-message", label: "New Support message", title: "New Support message", summary: "Emma E · #123ABC", subtitle: "Tap to view", color: "#313131", badgeIcon: IconType.ChatHelp },
 ];
 
 // ============================================================================
@@ -544,11 +552,17 @@ function FullScreenAlert({ alert, onDismiss, onView, themeId }: { alert: AlertTy
       </CloseBtn>
       <FullScreenContent>
         <LargeBadgeWrapper>
-          <LargeBadge $color={alert.color} $themeId={themeId}>1</LargeBadge>
+          <LargeBadge $color={alert.color} $themeId={themeId}>
+            {alert.badgeIcon ? (
+              <Icon type={alert.badgeIcon as any} size={48} />
+            ) : (
+              "1"
+            )}
+          </LargeBadge>
         </LargeBadgeWrapper>
         <AlertTitle $themeId={themeId}>{alert.title}</AlertTitle>
-        <AlertSummary>{alert.summary}</AlertSummary>
-        <AlertSubtitle>{alert.subtitle}</AlertSubtitle>
+        <AlertSummary $themeId={themeId}>{alert.summary}</AlertSummary>
+        <AlertSubtitle $themeId={themeId}>{alert.subtitle}</AlertSubtitle>
       </FullScreenContent>
     </FullScreenOverlay>
   );

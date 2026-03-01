@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useParams, useNavigate } from "react-router";
 import styled, { keyframes, css } from "styled-components";
 import {
   Button,
@@ -19,6 +20,10 @@ import {
 import { OrdersHomeDemo } from "./OrdersHome";
 import { SubtleAlertsDemo } from "./SubtleAlerts";
 import { FullScreenAlertsDemo } from "./FullScreenAlerts";
+import { NavMenuDemo } from "./NavMenu";
+import { ToastsDemo } from "./Toasts";
+import { OrderSortingDiagram } from "./OrderSorting";
+import { NotificationLogicDiagram } from "./NotificationLogic";
 
 // ============================================================================
 // LAYOUT
@@ -150,6 +155,22 @@ const SpecValue = styled.span`
   font-family: "SF Mono", "Menlo", "Monaco", monospace;
   font-size: 13px;
   color: ${TextColor.text.default};
+`;
+
+const WipBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: ${Theme.usage.borderRadius.full};
+  background: #FFF0C2;
+  color: #8A6500;
+  font-family: "DD-TTNorms", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  line-height: 16px;
+  text-transform: uppercase;
+  flex-shrink: 0;
 `;
 
 // ============================================================================
@@ -288,6 +309,7 @@ interface Demo {
   description: string;
   instruction: string;
   specs: SpecGroup[];
+  wip?: boolean;
 }
 
 const demos: Demo[] = [
@@ -301,23 +323,31 @@ const demos: Demo[] = [
       {
         title: "Loading bar",
         specs: [
-          { label: "Duration", value: "3000ms" },
-          { label: "Easing", value: "Linear" },
+          { label: "Duration", value: "3000ms (custom)" },
+          { label: "Easing", value: "easing.linear" },
           { label: "Direction", value: "Left → Right" },
         ],
       },
       {
         title: "Cancel — bar retract",
         specs: [
-          { label: "Duration", value: "150ms" },
-          { label: "Easing", value: "Ease in" },
+          { label: "Duration", value: "duration.functional.exit.xShort (150ms)" },
+          { label: "Easing", value: "easing.subtle.exit" },
+          { label: "Direction", value: "Right → Left" },
+        ],
+      },
+      {
+        title: "Complete — bar fade",
+        specs: [
+          { label: "Duration", value: "duration.auto.default.short (400ms)" },
+          { label: "Easing", value: "easing.subtle.enter" },
         ],
       },
       {
         title: "Cancel — text shake",
         specs: [
-          { label: "Duration", value: "500ms" },
-          { label: "Easing", value: "Ease out" },
+          { label: "Duration", value: "duration.functional.default.long (500ms)" },
+          { label: "Easing", value: "easing.subtle.enter" },
         ],
       },
     ],
@@ -332,8 +362,8 @@ const demos: Demo[] = [
       {
         title: "Order detail — open",
         specs: [
-          { label: "Duration", value: "250ms" },
-          { label: "Easing", value: "cubic-bezier(0.2, 0, 0, 1)" },
+          { label: "Duration", value: "duration.spring.out.short (250ms)" },
+          { label: "Easing", value: "easing.spring.out.default" },
           { label: "Scale", value: "0.92 → 1" },
           { label: "Opacity", value: "0 → 1" },
         ],
@@ -341,16 +371,16 @@ const demos: Demo[] = [
       {
         title: "Scrim — fade in",
         specs: [
-          { label: "Duration", value: "200ms" },
-          { label: "Easing", value: "Ease out" },
+          { label: "Duration", value: "duration.fade.long (200ms)" },
+          { label: "Easing", value: "easing.subtle.enter" },
           { label: "Opacity", value: "0 → 0.5" },
         ],
       },
       {
         title: "Card — close bounce",
         specs: [
-          { label: "Duration", value: "450ms" },
-          { label: "Easing", value: "Ease in-out" },
+          { label: "Duration", value: "duration.auto.default.short (400ms)" },
+          { label: "Easing", value: "easing.subtle.default" },
           { label: "Keyframes", value: "1 → 0.95 → 0.98 → 1" },
           { label: "Property", value: "Scale" },
         ],
@@ -361,14 +391,14 @@ const demos: Demo[] = [
     id: "subtle-alerts",
     label: "Subtle alerts",
     description:
-      "A non-blocking banner that slides in from the top to notify of new orders.",
+      "A non-blocking banner that slides in from the top to surface timely updates.",
     instruction: "",
     specs: [
       {
         title: "Alert — slide in",
         specs: [
-          { label: "Duration", value: "350ms" },
-          { label: "Easing", value: "cubic-bezier(0.2, 0, 0, 1)" },
+          { label: "Duration", value: "duration.auto.exit.medium (350ms)" },
+          { label: "Easing", value: "easing.spring.out.default" },
           { label: "Transform", value: "translateY(-100%) → 0" },
           { label: "Opacity", value: "0 → 1" },
         ],
@@ -376,8 +406,8 @@ const demos: Demo[] = [
       {
         title: "Alert — slide out",
         specs: [
-          { label: "Duration", value: "250ms" },
-          { label: "Easing", value: "Ease in" },
+          { label: "Duration", value: "duration.auto.exit.xShort (250ms)" },
+          { label: "Easing", value: "easing.subtle.exit" },
           { label: "Transform", value: "0 → translateY(-100%)" },
           { label: "Opacity", value: "1 → 0" },
         ],
@@ -394,62 +424,155 @@ const demos: Demo[] = [
       {
         title: "Overlay — fade in",
         specs: [
-          { label: "Duration", value: "300ms" },
-          { label: "Easing", value: "Ease out" },
+          { label: "Duration", value: "duration.auto.default.xShort (300ms)" },
+          { label: "Easing", value: "easing.subtle.enter" },
           { label: "Opacity", value: "0 → 1" },
-        ],
-      },
-      {
-        title: "Badge — scale in",
-        specs: [
-          { label: "Duration", value: "400ms" },
-          { label: "Easing", value: "cubic-bezier(0.2, 0, 0, 1)" },
-          { label: "Scale", value: "0.5 → 1" },
         ],
       },
       {
         title: "Badge — pulse + ripple",
         specs: [
-          { label: "Duration", value: "1800ms" },
-          { label: "Easing", value: "Ease in-out" },
+          { label: "Duration", value: "1800ms (custom)" },
+          { label: "Easing (pulse)", value: "easing.subtle.default" },
+          { label: "Easing (ripple)", value: "easing.subtle.enter" },
           { label: "Loop", value: "Infinite" },
           { label: "Scale", value: "1 → 1.08 → 1" },
           { label: "Ring scale", value: "1 → 2.2" },
         ],
       },
       {
-        title: "Text — slide up",
+        title: "Overlay — fade out",
         specs: [
-          { label: "Duration", value: "350ms" },
-          { label: "Easing", value: "Ease out" },
-          { label: "Delay (title)", value: "150ms" },
-          { label: "Delay (subtitle)", value: "250ms" },
+          { label: "Duration", value: "duration.fade.long (200ms)" },
+          { label: "Easing", value: "easing.subtle.exit" },
+          { label: "Opacity", value: "1 → 0" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "nav-menu",
+    label: "Navigation menu",
+    description:
+      "A side sheet that slides in from the left to reveal the navigation menu, with a scrim overlay on the main content.",
+    instruction: "Tap the hamburger menu to open, tap scrim or ✕ to close",
+    specs: [
+      {
+        title: "Sheet — slide in",
+        specs: [
+          { label: "Duration", value: "duration.auto.default.xShort (300ms)" },
+          { label: "Easing", value: "easing.spring.out.default" },
+          { label: "Transform", value: "translateX(-100%) → translateX(0)" },
         ],
       },
       {
-        title: "Overlay — fade out",
+        title: "Sheet — slide out",
         specs: [
-          { label: "Duration", value: "200ms" },
-          { label: "Easing", value: "Ease in" },
+          { label: "Duration", value: "duration.functional.exit.short (200ms)" },
+          { label: "Easing", value: "easing.subtle.exit" },
+          { label: "Transform", value: "translateX(0) → translateX(-100%)" },
+        ],
+      },
+      {
+        title: "Scrim — fade in",
+        specs: [
+          { label: "Duration", value: "duration.fade.long (200ms)" },
+          { label: "Easing", value: "easing.subtle.enter" },
+          { label: "Opacity", value: "0 → 1" },
+        ],
+      },
+      {
+        title: "Scrim — fade out",
+        specs: [
+          { label: "Duration", value: "duration.fade.long (200ms)" },
+          { label: "Easing", value: "easing.subtle.exit" },
           { label: "Opacity", value: "1 → 0" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "toasts",
+    label: "Toasts",
+    description:
+      "Non-blocking feedback toasts that stack from the top. Demonstrates multi-toast stacking and coexistence with a subtle alert.",
+    instruction: "Use buttons below to trigger toasts and alerts",
+    specs: [
+      {
+        title: "Toast — slide in",
+        specs: [
+          { label: "Duration", value: "duration.fade.long (200ms)" },
+          { label: "Easing", value: "easing.subtle.enter" },
+          { label: "Transform", value: "translateY(-12px) → 0" },
+          { label: "Opacity", value: "0 → 1" },
+        ],
+      },
+      {
+        title: "Toast — slide out",
+        specs: [
+          { label: "Duration", value: "duration.fade.long (200ms)" },
+          { label: "Easing", value: "easing.subtle.exit" },
+          { label: "Transform", value: "0 → translateY(-12px)" },
+          { label: "Opacity", value: "1 → 0" },
+        ],
+      },
+      {
+        title: "Toast layer — reposition",
+        specs: [
+          { label: "Duration", value: "duration.auto.default.xShort (300ms)" },
+          { label: "Easing", value: "easing.spring.out.default" },
+          { label: "Property", value: "top offset" },
+        ],
+      },
+      {
+        title: "Auto dismiss",
+        specs: [
+          { label: "Duration", value: "4000ms" },
+          { label: "Max visible", value: "3" },
         ],
       },
     ],
   },
 ];
 
+const behaviors: Demo[] = [
+  {
+    id: "order-sorting",
+    label: "KDS order sorting",
+    description:
+      "How orders are sorted and prioritized in the KDS orders home view.",
+    instruction: "",
+    specs: [],
+  },
+  {
+    id: "notification-logic",
+    label: "Notification logic",
+    description:
+      "When to show a full screen alert vs. a subtle alert, and how subtle alerts escalate to full screen when the Mx is idle.",
+    instruction: "",
+    specs: [],
+    wip: true,
+  },
+];
+
+const allPages = [...demos, ...behaviors];
+
 // ============================================================================
 // COMPONENT
 // ============================================================================
 
 export const Home = () => {
-  const [activeDemo, setActiveDemo] = useState(demos[0].id);
+  const { demoId } = useParams<{ demoId: string }>();
+  const navigate = useNavigate();
+  const activeDemo = allPages.find((d) => d.id === demoId) ? demoId! : demos[0].id;
+  const setActiveDemo = useCallback((id: string) => navigate(`/${id}`), [navigate]);
+
   const [showSpecs, setShowSpecs] = useState(true);
   const [activeThemeId, setActiveThemeId] = useState("doordash");
   const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const currentDemo = demos.find((d) => d.id === activeDemo)!;
+  const currentDemo = allPages.find((d) => d.id === activeDemo)!;
   const currentTheme = themeOptions.find((t) => t.id === activeThemeId)!;
 
   useEffect(() => {
@@ -467,7 +590,7 @@ export const Home = () => {
       <Sidebar>
         <SidebarHeader>
           <StackChildren size={Spacing.xxSmall}>
-            <Text textStyle={TextStyle.title.medium}>ULOM Animation Demo</Text>
+            <Text textStyle={TextStyle.title.medium}><span style={{ opacity: 0.7 }}>ULOM</span><br />System Demos</Text>
             <Text textStyle={TextStyle.body.small.default} color={TextColor.text.subdued.default}>
               Questions? @<a href="https://doordash.enterprise.slack.com/team/U073XBFAWUV" target="_blank" rel="noopener noreferrer" style={{ color: "inherit" }}>Oliver</a> on Slack
             </Text>
@@ -495,6 +618,32 @@ export const Home = () => {
               >
                 {demo.label}
               </Text>
+            </SidebarItem>
+          ))}
+
+          <SidebarSectionLabel style={{ marginTop: 12 }}>
+            <Text textStyle={TextStyle.label.small.strong} color={TextColor.text.subdued.default}>
+              BEHAVIOR
+            </Text>
+          </SidebarSectionLabel>
+          {behaviors.map((item) => (
+            <SidebarItem
+              key={item.id}
+              $isActive={activeDemo === item.id}
+              onClick={() => setActiveDemo(item.id)}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <Text
+                  textStyle={
+                    activeDemo === item.id
+                      ? TextStyle.label.medium.strong
+                      : TextStyle.label.medium.default
+                  }
+                >
+                  {item.label}
+                </Text>
+                {item.wip && <WipBadge>WIP</WipBadge>}
+              </span>
             </SidebarItem>
           ))}
         </SidebarBody>
@@ -535,7 +684,10 @@ export const Home = () => {
       <MainContent>
         <StackChildren size={Spacing.large}>
           <StackChildren size={Spacing.xSmall}>
-            <Text textStyle={TextStyle.title.large}>{currentDemo.label}</Text>
+            <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <Text textStyle={TextStyle.title.large}>{currentDemo.label}</Text>
+              {currentDemo.wip && <WipBadge>WIP</WipBadge>}
+            </span>
             <Text textStyle={TextStyle.body.medium.default} color={TextColor.text.subdued.default}>
               {currentDemo.description}
             </Text>
@@ -548,15 +700,22 @@ export const Home = () => {
                 {activeDemo === "orders-home" && <OrdersHomeDemo />}
                 {activeDemo === "subtle-alerts" && <SubtleAlertsDemo />}
                 {activeDemo === "full-screen-alerts" && <FullScreenAlertsDemo themeId={activeThemeId} />}
+                {activeDemo === "nav-menu" && <NavMenuDemo />}
+                {activeDemo === "toasts" && <ToastsDemo />}
+                {activeDemo === "order-sorting" && <OrderSortingDiagram />}
+                {activeDemo === "notification-logic" && <NotificationLogicDiagram />}
               </DemoContent>
             </Theming>
-            <InstructionHint>
-              <Text textStyle={TextStyle.body.small.default} color={TextColor.text.subdued.default}>
-                {currentDemo.instruction}
-              </Text>
-            </InstructionHint>
+            {currentDemo.instruction && (
+              <InstructionHint>
+                <Text textStyle={TextStyle.body.small.default} color={TextColor.text.subdued.default}>
+                  {currentDemo.instruction}
+                </Text>
+              </InstructionHint>
+            )}
           </DemoArea>
 
+          {currentDemo.specs.length > 0 && (
           <StackChildren size={Spacing.medium}>
             <SpecsToggle onClick={() => setShowSpecs(!showSpecs)}>
               <ChevronIcon $isOpen={showSpecs}>▼</ChevronIcon>
@@ -590,6 +749,7 @@ export const Home = () => {
               </StackChildren>
             )}
           </StackChildren>
+          )}
         </StackChildren>
       </MainContent>
     </PageContainer>
@@ -635,7 +795,7 @@ const LoaderBtnWrapper = styled.div<{ $isShaking: boolean }>`
     z-index: 2;
     animation: ${(props) =>
       props.$isShaking
-        ? css`${shakeKeyframes} 500ms ease-out`
+        ? css`${shakeKeyframes} ${Theme.usage.motion.duration.functional.default.long} ${Theme.usage.motion.easing.subtle.enter}`
         : "none"};
   }
 `;
@@ -735,7 +895,7 @@ function LoaderButtonDemo() {
   switch (phase) {
     case "loading":
       barScale = 1;
-      barTransition = "transform 3000ms linear";
+      barTransition = `transform 3000ms ${Theme.usage.motion.easing.linear}`;
       innerOpacity = 1;
       innerTransition = "none";
       break;
@@ -743,11 +903,11 @@ function LoaderButtonDemo() {
       barScale = 1;
       barTransition = "none";
       innerOpacity = 0;
-      innerTransition = "opacity 400ms ease-out";
+      innerTransition = `opacity ${Theme.usage.motion.duration.auto.default.short} ${Theme.usage.motion.easing.subtle.enter}`;
       break;
     case "cancelling":
       barScale = 0;
-      barTransition = "transform 150ms ease-in";
+      barTransition = `transform ${Theme.usage.motion.duration.functional.exit.xShort} ${Theme.usage.motion.easing.subtle.exit}`;
       innerOpacity = 1;
       innerTransition = "none";
       break;

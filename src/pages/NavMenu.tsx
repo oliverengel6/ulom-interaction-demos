@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import {
   IconButton,
@@ -17,6 +17,7 @@ const DeviceFrame = styled.div`
   position: relative;
   width: 100%;
   max-width: 740px;
+  min-height: 480px;
   background: #fff;
   border-radius: ${Theme.usage.borderRadius.large};
   overflow: hidden;
@@ -89,6 +90,13 @@ const StatusDot = styled.div`
   border: 3px solid #fff;
 `;
 
+const PlaceholderLine = styled.div<{ $width?: string; $height?: string }>`
+  width: ${(props) => props.$width || "100%"};
+  height: ${(props) => props.$height || "14px"};
+  background: #f1f1f1;
+  border-radius: 6px;
+`;
+
 const CardStack = styled.div`
   display: flex;
   gap: 17px;
@@ -97,18 +105,7 @@ const CardStack = styled.div`
   align-items: flex-start;
 `;
 
-// ============================================================================
-// ORDER CARD
-// ============================================================================
-
-const cardBounce = keyframes`
-  0%   { transform: scale(1); }
-  40%  { transform: scale(0.95); }
-  70%  { transform: scale(0.98); }
-  100% { transform: scale(1); }
-`;
-
-const Card = styled.div<{ $bouncing?: boolean }>`
+const Card = styled.div`
   width: 232px;
   min-width: 232px;
   border-radius: 16px;
@@ -117,35 +114,21 @@ const Card = styled.div<{ $bouncing?: boolean }>`
   display: flex;
   flex-direction: column;
   position: relative;
-  animation: ${(props) => (props.$bouncing ? cardBounce : "none")} ${Theme.usage.motion.duration.auto.default.short} ${Theme.usage.motion.easing.subtle.default};
 `;
 
 const CardEyebrow = styled.div`
   background: #006a25;
   padding: 8px 24px 8px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   border-radius: 16px 16px 0 0;
 `;
 
 const CardBody = styled.div`
   background: #fff;
   border-radius: 16px 16px 0 0;
-  margin-top: 0px;
-  position: relative;
-  z-index: 1;
   padding: 12px 0 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
-`;
-
-const PlaceholderLine = styled.div<{ $width?: string; $height?: string }>`
-  width: ${(props) => props.$width || "100%"};
-  height: ${(props) => props.$height || "14px"};
-  background: #f1f1f1;
-  border-radius: 6px;
 `;
 
 const PlaceholderBlock = styled.div`
@@ -202,7 +185,7 @@ const FooterButtonPlaceholder = styled.div`
 `;
 
 // ============================================================================
-// ORDER DETAIL OVERLAY
+// NAV MENU OVERLAY
 // ============================================================================
 
 const scrimFadeIn = keyframes`
@@ -210,80 +193,93 @@ const scrimFadeIn = keyframes`
   to   { opacity: 1; }
 `;
 
-const overlayScaleIn = keyframes`
-  from { transform: scale(0.92); opacity: 0; }
-  to   { transform: scale(1); opacity: 1; }
+const scrimFadeOut = keyframes`
+  from { opacity: 1; }
+  to   { opacity: 0; }
 `;
 
-const Scrim = styled.div`
+const sheetSlideIn = keyframes`
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+`;
+
+const sheetSlideOut = keyframes`
+  from { transform: translateX(0); }
+  to   { transform: translateX(-100%); }
+`;
+
+const NavScrim = styled.div<{ $closing: boolean }>`
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: 10;
   display: flex;
-  padding: 12px;
-  animation: ${scrimFadeIn} ${Theme.usage.motion.duration.fade.long} ${Theme.usage.motion.easing.subtle.enter};
+  animation: ${(props) => (props.$closing ? scrimFadeOut : scrimFadeIn)}
+    ${Theme.usage.motion.duration.fade.long}
+    ${(props) => (props.$closing ? Theme.usage.motion.easing.subtle.exit : Theme.usage.motion.easing.subtle.enter)}
+    forwards;
 `;
 
-const Overlay = styled.div`
-  flex: 1;
+const NavSheet = styled.div<{ $closing: boolean }>`
+  width: 300px;
+  max-width: 75%;
+  height: 100%;
   background: #fff;
-  border-radius: 16px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  animation: ${overlayScaleIn} ${Theme.usage.motion.duration.spring.out.short} ${Theme.usage.motion.easing.spring.out.default};
+  animation: ${(props) => (props.$closing ? sheetSlideOut : sheetSlideIn)}
+    ${(props) => (props.$closing ? Theme.usage.motion.duration.functional.exit.short : Theme.usage.motion.duration.auto.default.xShort)}
+    ${(props) => (props.$closing ? Theme.usage.motion.easing.subtle.exit : Theme.usage.motion.easing.spring.out.default)}
+    forwards;
 `;
 
-const DetailFooter = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-`;
-
-const DetailIconBtn = styled.div`
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: #f1f1f1;
-  flex-shrink: 0;
-`;
-
-const DetailOutlineBtn = styled.div`
-  height: 44px;
-  width: 120px;
-  border-radius: 9999px;
-  background: #f1f1f1;
-  flex-shrink: 0;
-`;
-
-const DetailFilledBtn = styled.div`
-  height: 44px;
-  width: 224px;
-  border-radius: 9999px;
-  background: #181818;
-  flex-shrink: 0;
-`;
-
-const DetailHeader = styled.div`
+const NavHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px;
+  padding: 16px;
 `;
 
-const DetailBody = styled.div`
-  flex: 1;
+const NavAvatar = styled.div`
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #f1f1f1;
+`;
+
+const NavSection = styled.div`
   display: flex;
-  padding: 0 16px 16px;
+  flex-direction: column;
+  padding: 8px 0;
 `;
 
-const DetailPlaceholderBox = styled.div`
-  width: 45%;
-  margin-left: auto;
-  background: #f5f5f5;
-  border-radius: 16px;
+const NavItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+`;
+
+const NavIcon = styled.div`
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: #e8e8e8;
+  flex-shrink: 0;
+`;
+
+const NavDivider = styled.div`
+  height: 1px;
+  background: #f1f1f1;
+  margin: 4px 16px;
+`;
+
+const NavFooter = styled.div`
+  margin-top: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 `;
 
 // ============================================================================
@@ -298,51 +294,84 @@ const tabs = [
 ];
 
 const orders = [
-  { id: "#ABC123", name: "David C", time: "20 min", status: "New" },
-  { id: "#DEF456", name: "Sarah M", time: "15 min", status: "New" },
-  { id: "#GHI789", name: "James L", time: "8 min", status: "In progress" },
-  { id: "#JKL012", name: "Emily R", time: "Ready", status: "Ready" },
+  { id: "#ABC123" },
+  { id: "#DEF456" },
+  { id: "#GHI789" },
+  { id: "#JKL012" },
 ];
+
+const CLOSE_MS = 200;
 
 // ============================================================================
 // COMPONENT
 // ============================================================================
 
-function OrderDetailOverlay({ onClose }: { onClose: () => void }) {
+function NavMenuOverlay({ onClose }: { onClose: () => void }) {
+  const [closing, setClosing] = useState(false);
+
+  const handleClose = useCallback(() => {
+    if (closing) return;
+    setClosing(true);
+    setTimeout(onClose, CLOSE_MS);
+  }, [closing, onClose]);
+
   return (
-    <Scrim onClick={onClose}>
-      <Overlay onClick={(e) => e.stopPropagation()}>
-        <DetailHeader>
-          <IconButton
-            iconType={IconType.Close}
-            size={IconButtonSize.medium}
-            type={IconButtonType.tertiary}
-            accessibilityLabel="Close"
-            onClick={onClose}
-          />
-        </DetailHeader>
-        <DetailBody>
-          <DetailPlaceholderBox />
-        </DetailBody>
-        <DetailFooter>
-          <DetailIconBtn />
-          <DetailIconBtn />
-          <div style={{ flex: 1 }} />
-          <DetailOutlineBtn />
-          <DetailFilledBtn />
-        </DetailFooter>
-      </Overlay>
-    </Scrim>
+    <NavScrim $closing={closing} onClick={handleClose}>
+      <NavSheet $closing={closing} onClick={(e) => e.stopPropagation()}>
+          <NavHeader>
+            <NavAvatar />
+            <IconButton
+              iconType={IconType.Close}
+              size={IconButtonSize.medium}
+              type={IconButtonType.tertiary}
+              accessibilityLabel="Close menu"
+              onClick={handleClose}
+            />
+          </NavHeader>
+
+          <PlaceholderBlock style={{ padding: "0 20px 12px" }}>
+            <PlaceholderLine $width="55%" $height="18px" />
+            <PlaceholderLine $width="35%" $height="12px" />
+          </PlaceholderBlock>
+
+          <NavDivider />
+
+          <NavSection>
+            {[0, 1, 2, 3].map((i) => (
+              <NavItem key={i}>
+                <NavIcon />
+                <PlaceholderLine $width={`${50 + i * 10}%`} />
+              </NavItem>
+            ))}
+          </NavSection>
+
+          <NavDivider />
+
+          <NavSection>
+            {[0, 1].map((i) => (
+              <NavItem key={i}>
+                <NavIcon />
+                <PlaceholderLine $width={`${45 + i * 15}%`} />
+              </NavItem>
+            ))}
+          </NavSection>
+
+          <NavFooter>
+            <PlaceholderLine $width="40%" $height="12px" />
+            <PlaceholderLine $width="25%" $height="10px" />
+          </NavFooter>
+      </NavSheet>
+    </NavScrim>
   );
 }
 
-export function OrdersHomeDemo() {
-  const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
-  const [bouncingCard, setBouncingCard] = useState<string | null>(null);
-  const handleClose = useCallback(() => {
-    setBouncingCard(selectedOrder);
-    setSelectedOrder(null);
-  }, [selectedOrder]);
+export function NavMenuDemo() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setMenuOpen(true), 500);
+    return () => clearTimeout(t);
+  }, []);
 
   return (
     <DeviceFrame>
@@ -357,6 +386,7 @@ export function OrdersHomeDemo() {
             size={IconButtonSize.large}
             type={IconButtonType.tertiary}
             accessibilityLabel="Menu"
+            onClick={() => setMenuOpen(true)}
           />
           <StatusDot />
         </MenuBtn>
@@ -378,15 +408,8 @@ export function OrdersHomeDemo() {
 
       <CardStack>
         {orders.map((order) => (
-          <Card
-            key={order.id}
-            $bouncing={bouncingCard === order.id}
-            onAnimationEnd={() => setBouncingCard(null)}
-            onClick={() => setSelectedOrder(order.id)}
-            style={{ cursor: "pointer" }}
-          >
+          <Card key={order.id}>
             <CardEyebrow />
-
             <CardBody>
               <PlaceholderBlock>
                 <PlaceholderLine $width="55%" $height="18px" />
@@ -414,8 +437,8 @@ export function OrdersHomeDemo() {
         ))}
       </CardStack>
 
-      {selectedOrder && (
-        <OrderDetailOverlay onClose={handleClose} />
+      {menuOpen && (
+        <NavMenuOverlay onClose={() => setMenuOpen(false)} />
       )}
     </DeviceFrame>
   );

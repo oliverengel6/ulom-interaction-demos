@@ -4,6 +4,7 @@ import {
   Button,
   ButtonType,
   ButtonSize,
+  Icon,
   IconButton,
   IconButtonType,
   IconButtonSize,
@@ -120,7 +121,7 @@ const Card = styled.div<{ $bouncing?: boolean }>`
   display: flex;
   flex-direction: column;
   position: relative;
-  animation: ${(props) => (props.$bouncing ? cardBounce : "none")} 450ms ease-in-out;
+  animation: ${(props) => (props.$bouncing ? cardBounce : "none")} ${Theme.usage.motion.duration.auto.default.short} ${Theme.usage.motion.easing.subtle.default};
 `;
 
 const CardEyebrow = styled.div`
@@ -222,7 +223,7 @@ const Scrim = styled.div`
   z-index: 10;
   display: flex;
   padding: 12px;
-  animation: ${scrimFadeIn} 200ms ease-out;
+  animation: ${scrimFadeIn} ${Theme.usage.motion.duration.fade.long} ${Theme.usage.motion.easing.subtle.enter};
 `;
 
 const OverlayPanel = styled.div`
@@ -232,7 +233,7 @@ const OverlayPanel = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: ${overlayScaleIn} 250ms cubic-bezier(0.2, 0, 0, 1);
+  animation: ${overlayScaleIn} ${Theme.usage.motion.duration.spring.out.short} ${Theme.usage.motion.easing.spring.out.default};
 `;
 
 const DetailFooter = styled.div`
@@ -307,6 +308,11 @@ const alertSlideOut = keyframes`
   to   { transform: translateY(-100%); opacity: 0; }
 `;
 
+const alertPromote = keyframes`
+  from { transform: scale(0.92); opacity: 0.6; }
+  to   { transform: scale(1); opacity: 1; }
+`;
+
 const AlertContainer = styled.div`
   position: absolute;
   top: 0;
@@ -314,11 +320,19 @@ const AlertContainer = styled.div`
   right: 0;
   z-index: 20;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   padding: 28px 48px 0;
 `;
 
-const AlertBanner = styled.div<{ $dismissing: boolean; $color: string }>`
+const AlertStack = styled.div`
+  position: relative;
+  width: 380px;
+`;
+
+const AlertBanner = styled.div<{ $dismissing: boolean; $color: string; $promote?: boolean }>`
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -327,10 +341,37 @@ const AlertBanner = styled.div<{ $dismissing: boolean; $color: string }>`
   border-radius: 9999px;
   padding: 10px 12px 10px 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  animation: ${(props) => (props.$dismissing ? alertSlideOut : alertSlideIn)} 
-    ${(props) => (props.$dismissing ? "250ms" : "350ms")} 
-    ${(props) => (props.$dismissing ? "ease-in" : "cubic-bezier(0.2, 0, 0, 1)")}
+  animation: ${(props) =>
+    props.$dismissing
+      ? alertSlideOut
+      : props.$promote
+        ? "none"
+        : alertSlideIn}
+    ${(props) => (props.$dismissing ? Theme.usage.motion.duration.auto.exit.xShort : Theme.usage.motion.duration.auto.exit.medium)} 
+    ${(props) => (props.$dismissing ? Theme.usage.motion.easing.subtle.exit : Theme.usage.motion.easing.spring.out.default)}
     forwards;
+`;
+
+const NextPreview = styled.div<{ $color: string; $promoting?: boolean }>`
+  position: absolute;
+  top: ${(p) => (p.$promoting ? "0" : "8px")};
+  left: 0;
+  right: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  width: 380px;
+  background: ${(p) => p.$color};
+  border-radius: 9999px;
+  padding: 10px 12px 10px 16px;
+  transform: scale(${(p) => (p.$promoting ? "1" : "0.92")});
+  opacity: ${(p) => (p.$promoting ? "1" : "0.6")};
+  pointer-events: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, ${(p) => (p.$promoting ? "0.2" : "0.1")});
+  height: 52px;
+  transition: transform ${Theme.usage.motion.duration.auto.exit.xShort} ${Theme.usage.motion.easing.spring.out.default},
+    opacity ${Theme.usage.motion.duration.auto.exit.xShort} ${Theme.usage.motion.easing.subtle.enter},
+    top ${Theme.usage.motion.duration.auto.exit.xShort} ${Theme.usage.motion.easing.spring.out.default};
 `;
 
 const badgePulse = keyframes`
@@ -358,7 +399,7 @@ const BadgeWrapper = styled.div`
     inset: 0;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.55);
-    animation: ${ringExpand} 1.8s ease-out infinite;
+    animation: ${ringExpand} 1.8s ${Theme.usage.motion.easing.subtle.enter} infinite;
     pointer-events: none;
   }
 `;
@@ -376,7 +417,7 @@ const AlertBadge = styled.div<{ $color: string }>`
   color: ${(props) => props.$color};
   position: relative;
   z-index: 1;
-  animation: ${badgePulse} 1.8s ease-in-out infinite;
+  animation: ${badgePulse} 1.8s ${Theme.usage.motion.easing.subtle.default} infinite;
 `;
 
 const AlertText = styled.div`
@@ -400,39 +441,19 @@ const AlertSubtitle = styled.span`
   white-space: nowrap;
 `;
 
-const AlertActions = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-`;
-
-const ViewButton = styled.button<{ $color: string }>`
-  all: unset;
-  cursor: pointer;
-  padding: 6px 16px;
-  border-radius: 9999px;
-  background: #fff;
-  font-size: 14px;
-  font-weight: 600;
-  color: ${(props) => props.$color};
-`;
-
 const DismissButton = styled.button`
   all: unset;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.15);
   color: #fff;
-  font-size: 18px;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.15);
-  }
+  font-size: 16px;
+  flex-shrink: 0;
 `;
 
 const TriggerButton = styled.div`
@@ -491,19 +512,34 @@ interface AlertType {
   title: string;
   subtitle: string;
   color: string;
+  badgeIcon?: string;
 }
 
 const alertTypes: AlertType[] = [
   { id: "new-order", label: "New order", title: "New order", subtitle: "$16.50 · 3 items", color: "#006a25" },
   { id: "auto-confirmed", label: "Auto-confirmed new order", title: "Order confirmed", subtitle: "$24.75 · 5 items", color: "#1537C7" },
   { id: "canceled", label: "Canceled order", title: "Canceled order", subtitle: "$25.30 · 4 items", color: "#B71000" },
+  { id: "customer-message", label: "New customer message", title: "New customer message", subtitle: "Emma E · #123ABC", color: "#313131", badgeIcon: IconType.ChatDefaultLine },
+  { id: "support-message", label: "New Support message", title: "New Support message", subtitle: "Emma E · #123ABC", color: "#313131", badgeIcon: IconType.ChatHelp },
 ];
 
 // ============================================================================
 // COMPONENT
 // ============================================================================
 
-function SubtleAlert({ alert, onDismiss, onView }: { alert: AlertType; onDismiss: () => void; onView: () => void }) {
+function SubtleAlert({
+  alert,
+  nextAlert,
+  fromPreview,
+  onDismiss,
+  onView,
+}: {
+  alert: AlertType;
+  nextAlert?: AlertType;
+  fromPreview?: boolean;
+  onDismiss: () => void;
+  onView: () => void;
+}) {
   const [dismissing, setDismissing] = useState(false);
   const viewingRef = useRef(false);
 
@@ -518,42 +554,74 @@ function SubtleAlert({ alert, onDismiss, onView }: { alert: AlertType; onDismiss
 
   return (
     <AlertContainer>
-      <AlertBanner
-        $dismissing={dismissing}
-        $color={alert.color}
-        onAnimationEnd={() => {
-          if (dismissing) {
-            onDismiss();
-            if (viewingRef.current) onView();
-          }
-        }}
-      >
-        <BadgeWrapper>
-          <AlertBadge $color={alert.color}>1</AlertBadge>
-        </BadgeWrapper>
-        <AlertText>
-          <AlertTitle>{alert.title}</AlertTitle>
-          <AlertSubtitle>{alert.subtitle}</AlertSubtitle>
-        </AlertText>
-        <AlertActions>
-          <ViewButton $color={alert.color} onClick={handleView}>View</ViewButton>
-          <DismissButton onClick={handleDismiss}>✕</DismissButton>
-        </AlertActions>
-      </AlertBanner>
+      <AlertStack>
+        {nextAlert && <NextPreview $color={nextAlert.color} $promoting={dismissing} />}
+        <AlertBanner
+          $dismissing={dismissing}
+          $color={alert.color}
+          $promote={fromPreview}
+          onClick={handleView}
+          style={{ cursor: "pointer" }}
+          onAnimationEnd={() => {
+            if (dismissing) {
+              onDismiss();
+              if (viewingRef.current) onView();
+            }
+          }}
+        >
+          <BadgeWrapper>
+            <AlertBadge $color={alert.color}>
+              {alert.badgeIcon ? (
+                <div style={{ width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                  <Icon type={alert.badgeIcon} size={20} />
+                </div>
+              ) : (
+                "1"
+              )}
+            </AlertBadge>
+          </BadgeWrapper>
+          <AlertText>
+            <AlertTitle>{alert.title}</AlertTitle>
+            <AlertSubtitle>{alert.subtitle}</AlertSubtitle>
+          </AlertText>
+          <DismissButton onClick={(e) => { e.stopPropagation(); handleDismiss(); }}>✕</DismissButton>
+        </AlertBanner>
+      </AlertStack>
     </AlertContainer>
   );
 }
 
+let queueKeyCounter = 0;
+
+interface QueuedAlert extends AlertType {
+  queueKey: number;
+}
+
 export function SubtleAlertsDemo() {
-  const [showAlert, setShowAlert] = useState(true);
+  const [alertQueue, setAlertQueue] = useState<QueuedAlert[]>(() => [
+    { ...alertTypes[0], queueKey: ++queueKeyCounter },
+  ]);
   const [selectedAlertId, setSelectedAlertId] = useState(alertTypes[0].id);
   const selectedAlert = alertTypes.find((a) => a.id === selectedAlertId)!;
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
   const [bouncingCard, setBouncingCard] = useState<string | null>(null);
+  const promoteNextRef = useRef(false);
+
   const handleOverlayClose = useCallback(() => {
     setBouncingCard(selectedOrder);
     setSelectedOrder(null);
   }, [selectedOrder]);
+
+  const enqueueAlert = useCallback((alert: AlertType) => {
+    setAlertQueue((prev) => [...prev, { ...alert, queueKey: ++queueKeyCounter }]);
+  }, []);
+
+  const dismissCurrent = useCallback(() => {
+    setAlertQueue((prev) => {
+      promoteNextRef.current = prev.length > 1;
+      return prev.slice(1);
+    });
+  }, []);
 
   return (
     <Wrapper>
@@ -651,10 +719,13 @@ export function SubtleAlertsDemo() {
           </Scrim>
         )}
 
-        {showAlert && (
+        {alertQueue.length > 0 && (
           <SubtleAlert
-            alert={selectedAlert}
-            onDismiss={() => setShowAlert(false)}
+            key={alertQueue[0].queueKey}
+            alert={alertQueue[0]}
+            nextAlert={alertQueue[1]}
+            fromPreview={promoteNextRef.current}
+            onDismiss={dismissCurrent}
             onView={() => setSelectedOrder(orders[0].id)}
           />
         )}
@@ -673,12 +744,23 @@ export function SubtleAlertsDemo() {
           <Button
             type={ButtonType.tertiary}
             size={ButtonSize.medium}
-            onClick={() => {
-              setShowAlert(false);
-              requestAnimationFrame(() => setShowAlert(true));
-            }}
+            onClick={() => enqueueAlert(selectedAlert)}
           >
             Trigger alert
+          </Button>
+        </TriggerButton>
+        <TriggerButton>
+          <Button
+            type={ButtonType.tertiary}
+            size={ButtonSize.medium}
+            onClick={() => {
+              const queued = new Set(alertQueue.map((a) => a.id));
+              const batch = [alertTypes[0], alertTypes[2], alertTypes[3]]
+                .filter((a) => !queued.has(a.id));
+              batch.forEach((a) => enqueueAlert(a));
+            }}
+          >
+            Trigger multiple
           </Button>
         </TriggerButton>
       </Controls>
