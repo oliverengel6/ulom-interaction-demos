@@ -29,6 +29,7 @@ import { ToastsDemo } from "./Toasts";
 import { OrderSortingDiagram } from "./OrderSorting";
 import { NotificationLogicDiagram } from "./NotificationLogic";
 import { CanceledOrdersDiagram } from "./CanceledOrders";
+import { EmptyStatesDemo } from "./EmptyStates";
 
 // ============================================================================
 // LAYOUT
@@ -557,6 +558,15 @@ const demos: Demo[] = [
       },
     ],
   },
+  {
+    id: "empty-states",
+    label: "Empty states",
+    description:
+      "Experimental empty state illustration animations for the orders home screen. Not required for M0.5.",
+    instruction: "",
+    specs: [],
+    wip: true,
+  },
 ];
 
 const behaviors: Demo[] = [
@@ -650,15 +660,19 @@ export const Home = () => {
               $isActive={activeDemo === demo.id}
               onClick={() => handleNavClick(demo.id)}
             >
-              <Text
-                textStyle={
-                  activeDemo === demo.id
-                    ? TextStyle.label.medium.strong
-                    : TextStyle.label.medium.default
-                }
-              >
-                {demo.label}
-              </Text>
+              <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <Text
+                  textStyle={
+                    activeDemo === demo.id
+                      ? TextStyle.label.medium.strong
+                      : TextStyle.label.medium.default
+                  }
+                >
+                  {demo.label}
+                </Text>
+                {demo.wip && <WipBadge>WIP</WipBadge>}
+                {demo.legacy && <LegacyBadge>LEG</LegacyBadge>}
+              </span>
             </SidebarItem>
           ))}
 
@@ -740,6 +754,7 @@ export const Home = () => {
                 {activeDemo === "toasts" && <ToastsDemo />}
                 {activeDemo === "order-sorting" && <OrderSortingDiagram />}
                 {activeDemo === "notification-logic" && <NotificationLogicDiagram />}
+                {activeDemo === "empty-states" && <EmptyStatesDemo />}
                 {activeDemo === "canceled-orders" && <CanceledOrdersDiagram />}
               </DemoContent>
             </Theming>
