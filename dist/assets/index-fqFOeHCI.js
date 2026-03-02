@@ -1152,7 +1152,7 @@ Please change the parent <Route path="${Ie}"> to <Route path="${Ie==="/"?"*":`${
   cursor: pointer;
   position: absolute;
   top: 16px;
-  right: 16px;
+  left: 16px;
   display: flex;
   align-items: center;
   justify-content: center;

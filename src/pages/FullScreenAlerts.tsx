@@ -373,7 +373,7 @@ const CloseBtn = styled.button`
   cursor: pointer;
   position: absolute;
   top: 16px;
-  right: 16px;
+  left: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
