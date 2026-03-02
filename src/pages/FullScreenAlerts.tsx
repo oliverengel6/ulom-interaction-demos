@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from "react";
+import { useSearchParams } from "react-router";
 import styled, { keyframes } from "styled-components";
 import {
   Button,
@@ -52,8 +53,8 @@ const DeviceToggleBtn = styled.button<{ $active: boolean }>`
 const DeviceFrame = styled.div<{ $mobile?: boolean }>`
   position: relative;
   width: 100%;
-  max-width: ${(p) => (p.$mobile ? "375px" : "740px")};
-  min-height: ${(p) => (p.$mobile ? "720px" : "480px")};
+  max-width: ${(p) => (p.$mobile ? "320px" : "740px")};
+  ${(p) => p.$mobile ? "aspect-ratio: 375 / 812;" : "min-height: 480px;"}
   background: #fff;
   border-radius: ${(p) => (p.$mobile ? "40px" : Theme.usage.borderRadius.large)};
   overflow: hidden;
@@ -63,6 +64,8 @@ const DeviceFrame = styled.div<{ $mobile?: boolean }>`
       : "0 1px 12px rgba(0, 0, 0, 0.08)"};
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
     Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
 
   * {
     font-family: inherit !important;
@@ -253,23 +256,6 @@ const MobileHeader = styled.div`
   padding: 8px 16px;
 `;
 
-const MobileFilterRow = styled.div`
-  display: flex;
-  gap: 8px;
-  padding: 0 16px 8px;
-  overflow-x: auto;
-`;
-
-const MobileFilterChip = styled.div<{ $active?: boolean }>`
-  padding: 8px 16px;
-  border-radius: 9999px;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-  background: ${(p) => (p.$active ? "#181818" : "#f1f1f1")};
-  color: ${(p) => (p.$active ? "#fff" : "#666")};
-`;
-
 const MobileCardList = styled.div`
   display: flex;
   flex-direction: column;
@@ -316,6 +302,8 @@ const MobileBottomNav = styled.div`
   padding: 10px 16px 24px;
   border-top: 1px solid #f0f0f0;
   background: #fff;
+  margin-top: auto;
+  flex-shrink: 0;
 `;
 
 const MobileNavItem = styled.div<{ $active?: boolean }>`
@@ -591,6 +579,221 @@ const DetailFilledBtn = styled.div`
 `;
 
 // ============================================================================
+// MOBILE ORDER DETAIL (full-page)
+// ============================================================================
+
+const mobileSlideIn = keyframes`
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+`;
+
+const MobileDetailPage = styled.div<{ $skipEntrance?: boolean }>`
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  animation: ${(p) => (p.$skipEntrance ? "none" : mobileSlideIn)}
+    250ms ${Theme.usage.motion.easing.subtle.enter} forwards;
+`;
+
+const MobileDetailHeader = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 16px 16px 0;
+`;
+
+const MobileDetailNameBlock = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 16px 0;
+`;
+
+
+const MobileDetailDivider = styled.div`
+  height: 1px;
+  background: #f0f0f0;
+  margin: 12px 16px;
+`;
+
+const MobileDetailMeta = styled.div`
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+
+const MobileDetailItemRow = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 16px;
+`;
+
+const MobileDetailQty = styled.div`
+  font-size: 14px;
+  font-weight: 600;
+  color: #181818;
+  min-width: 24px;
+  padding-top: 1px;
+`;
+
+const MobileDetailItemInfo = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+
+const MobileDetailItemPrice = styled.div`
+  font-size: 14px;
+  font-weight: 600;
+  color: #181818;
+  flex-shrink: 0;
+`;
+
+const MobileDetailMoreBtn = styled.div`
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f1f1f1;
+  flex-shrink: 0;
+`;
+
+const MobileDetailModifier = styled.div`
+  font-size: 12px;
+  color: #888;
+  padding-left: 0;
+`;
+
+const MobileDetailTotals = styled.div`
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const MobileDetailTotalRow = styled.div<{ $bold?: boolean }>`
+  display: flex;
+  justify-content: space-between;
+  font-size: ${(p) => (p.$bold ? "14px" : "13px")};
+  font-weight: ${(p) => (p.$bold ? "700" : "400")};
+  color: ${(p) => (p.$bold ? "#181818" : "#666")};
+`;
+
+const MobileDetailCustomer = styled.div`
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+
+const MobileDetailFooter = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px 24px;
+  flex-shrink: 0;
+`;
+
+const MobileDetailConfirmBtn = styled.div`
+  flex: 1;
+  height: 44px;
+  border-radius: 9999px;
+  background: #181818;
+`;
+
+function MobileOrderDetail({ onClose, skipEntrance }: { onClose: () => void; skipEntrance?: boolean }) {
+  return (
+    <MobileDetailPage $skipEntrance={skipEntrance}>
+      <MobileDetailHeader>
+        <IconButton
+          iconType={IconType.ArrowLeft}
+          size={IconButtonSize.medium}
+          type={IconButtonType.tertiary}
+          accessibilityLabel="Back"
+          onClick={onClose}
+        />
+        <PlaceholderLine $width="72px" $height="36px" style={{ borderRadius: "9999px", background: "#f1f1f1", flexShrink: 0 }} />
+      </MobileDetailHeader>
+
+      <MobileDetailNameBlock>
+        <PlaceholderLine $width="45%" $height="22px" />
+      </MobileDetailNameBlock>
+
+      <MobileDetailDivider />
+
+      <MobileDetailMeta>
+        <PlaceholderLine $width="50%" $height="15px" />
+        <PlaceholderLine $width="30%" $height="12px" style={{ background: "#f5f5f5" }} />
+      </MobileDetailMeta>
+
+      <MobileDetailDivider />
+
+      {[0, 1, 2].map((i) => (
+        <MobileDetailItemRow key={i}>
+          <MobileDetailQty>1×</MobileDetailQty>
+          <MobileDetailItemInfo>
+            <PlaceholderLine $width="55%" $height="14px" />
+            <MobileDetailModifier>
+              <PlaceholderLine $width="40%" $height="11px" style={{ background: "#f5f5f5" }} />
+            </MobileDetailModifier>
+            <MobileDetailModifier>
+              <PlaceholderLine $width="45%" $height="11px" style={{ background: "#f5f5f5" }} />
+            </MobileDetailModifier>
+            <MobileDetailModifier>
+              <PlaceholderLine $width="38%" $height="11px" style={{ background: "#f5f5f5" }} />
+            </MobileDetailModifier>
+          </MobileDetailItemInfo>
+          <MobileDetailItemPrice>
+            <PlaceholderLine $width="40px" $height="14px" />
+          </MobileDetailItemPrice>
+          <MobileDetailMoreBtn />
+        </MobileDetailItemRow>
+      ))}
+
+      <MobileDetailDivider />
+
+      <MobileDetailTotals>
+        <MobileDetailTotalRow>
+          <span>Subtotal</span>
+          <PlaceholderLine $width="40px" $height="12px" />
+        </MobileDetailTotalRow>
+        <MobileDetailTotalRow>
+          <span>Tax</span>
+          <PlaceholderLine $width="36px" $height="12px" />
+        </MobileDetailTotalRow>
+        <MobileDetailTotalRow $bold>
+          <span>Total</span>
+          <PlaceholderLine $width="44px" $height="14px" />
+        </MobileDetailTotalRow>
+      </MobileDetailTotals>
+
+      <MobileDetailDivider />
+
+      <MobileDetailCustomer>
+        <span style={{ fontSize: 12, color: "#888" }}>Customer</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <PlaceholderLine $width="30%" $height="16px" />
+        </div>
+      </MobileDetailCustomer>
+
+      <div style={{ flex: 1 }} />
+
+      <MobileDetailFooter>
+        <FooterIconPlaceholder style={{ width: 44, height: 44 }} />
+        <MobileDetailConfirmBtn />
+      </MobileDetailFooter>
+    </MobileDetailPage>
+  );
+}
+
+// ============================================================================
 // DATA
 // ============================================================================
 
@@ -714,14 +917,6 @@ const mobileOrders = [
   { name: "Joel M", price: "$42.00", items: "5 items", color: "#494949" },
 ];
 
-const mobileFilters = [
-  { label: "All", active: true },
-  { label: "Needs action", active: false },
-  { label: "In progress", active: false },
-  { label: "Ready", active: false },
-  { label: "Scheduled", active: false },
-];
-
 function MobileContent() {
   return (
     <>
@@ -739,21 +934,7 @@ function MobileContent() {
           />
           <StatusDot style={{ width: 10, height: 10, borderWidth: 2 }} />
         </MenuBtn>
-        <IconButton
-          iconType={IconType.Search}
-          size={IconButtonSize.medium}
-          type={IconButtonType.tertiary}
-          accessibilityLabel="Search"
-        />
       </MobileHeader>
-
-      <MobileFilterRow>
-        {mobileFilters.map((f) => (
-          <MobileFilterChip key={f.label} $active={f.active}>
-            {f.label}
-          </MobileFilterChip>
-        ))}
-      </MobileFilterRow>
 
       <MobileCardList>
         {mobileOrders.map((order, i) => (
@@ -780,10 +961,9 @@ function MobileContent() {
 
       <MobileBottomNav>
         {[
-          { label: "Orders", active: true, color: "#181818" },
-          { label: "Menu", active: false },
-          { label: "Business", active: false },
-          { label: "Settings", active: false },
+          { label: "All", active: true, color: "#181818" },
+          { label: "In progress", active: false },
+          { label: "Ready", active: false },
         ].map((item) => (
           <MobileNavItem key={item.label} $active={item.active}>
             <MobileNavDot $color={item.color} />
@@ -863,7 +1043,9 @@ function TabletContent(_props: { themeId?: string }) {
 }
 
 export function FullScreenAlertsDemo({ themeId }: { themeId?: string }) {
-  const [deviceMode, setDeviceMode] = useState<"tablet" | "mobile">("tablet");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialDevice = searchParams.get("device") === "mobile" ? "mobile" : "tablet";
+  const [deviceMode, setDeviceMode] = useState<"tablet" | "mobile">(initialDevice);
   const [showAlert, setShowAlert] = useState(true);
   const [showOrderDetail, setShowOrderDetail] = useState(false);
   const [openedFromAlert, setOpenedFromAlert] = useState(false);
@@ -871,13 +1053,28 @@ export function FullScreenAlertsDemo({ themeId }: { themeId?: string }) {
   const selectedAlert = alertTypes.find((a) => a.id === selectedAlertId)!;
   const isMobile = deviceMode === "mobile";
 
+  const switchDevice = useCallback((mode: "tablet" | "mobile") => {
+    setDeviceMode(mode);
+    setShowAlert(true);
+    setShowOrderDetail(false);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (mode === "mobile") {
+        next.set("device", "mobile");
+      } else {
+        next.delete("device");
+      }
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
   return (
     <Wrapper>
       <DeviceToggle>
-        <DeviceToggleBtn $active={deviceMode === "tablet"} onClick={() => { setDeviceMode("tablet"); setShowAlert(true); setShowOrderDetail(false); }}>
+        <DeviceToggleBtn $active={deviceMode === "tablet"} onClick={() => switchDevice("tablet")}>
           Tablet
         </DeviceToggleBtn>
-        <DeviceToggleBtn $active={deviceMode === "mobile"} onClick={() => { setDeviceMode("mobile"); setShowAlert(true); setShowOrderDetail(false); }}>
+        <DeviceToggleBtn $active={deviceMode === "mobile"} onClick={() => switchDevice("mobile")}>
           Mobile
         </DeviceToggleBtn>
       </DeviceToggle>
@@ -886,10 +1083,17 @@ export function FullScreenAlertsDemo({ themeId }: { themeId?: string }) {
         {isMobile ? <MobileContent /> : <TabletContent themeId={themeId} />}
 
         {showOrderDetail && (
-          <OrderDetailOverlay
-            onClose={() => { setShowOrderDetail(false); setOpenedFromAlert(false); }}
-            skipEntrance={openedFromAlert}
-          />
+          isMobile ? (
+            <MobileOrderDetail
+              onClose={() => { setShowOrderDetail(false); setOpenedFromAlert(false); }}
+              skipEntrance={openedFromAlert}
+            />
+          ) : (
+            <OrderDetailOverlay
+              onClose={() => { setShowOrderDetail(false); setOpenedFromAlert(false); }}
+              skipEntrance={openedFromAlert}
+            />
+          )
         )}
 
         {showAlert && (
