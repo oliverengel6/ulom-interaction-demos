@@ -24,15 +24,43 @@ const Wrapper = styled.div`
   gap: 16px;
 `;
 
-const DeviceFrame = styled.div`
+const DeviceToggle = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 9999px;
+  background: ${Theme.usage.color.background.strong.default};
+  padding: 4px;
+`;
+
+const DeviceToggleBtn = styled.button<{ $active: boolean }>`
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: ${(p) => (p.$active ? "#fff" : "#666")};
+  background: ${(p) => (p.$active ? "#181818" : "transparent")};
+  transition: all 120ms ease;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+`;
+
+const DeviceFrame = styled.div<{ $mobile?: boolean }>`
   position: relative;
   width: 100%;
-  max-width: 740px;
-  min-height: 480px;
+  max-width: ${(p) => (p.$mobile ? "375px" : "740px")};
+  min-height: ${(p) => (p.$mobile ? "720px" : "480px")};
   background: #fff;
-  border-radius: ${Theme.usage.borderRadius.large};
+  border-radius: ${(p) => (p.$mobile ? "40px" : Theme.usage.borderRadius.large)};
   overflow: hidden;
-  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: ${(p) =>
+    p.$mobile
+      ? "0 2px 24px rgba(0, 0, 0, 0.12), 0 0 0 4px #1a1a1a"
+      : "0 1px 12px rgba(0, 0, 0, 0.08)"};
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
     Arial, sans-serif;
 
@@ -200,6 +228,117 @@ const FooterButtonPlaceholder = styled.div`
 `;
 
 // ============================================================================
+// MOBILE LAYOUT
+// ============================================================================
+
+const MobileTopBar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px 4px;
+  position: relative;
+`;
+
+const MobileNotch = styled.div`
+  width: 120px;
+  height: 28px;
+  border-radius: 20px;
+  background: #1a1a1a;
+`;
+
+const MobileHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+`;
+
+const MobileFilterRow = styled.div`
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 8px;
+  overflow-x: auto;
+`;
+
+const MobileFilterChip = styled.div<{ $active?: boolean }>`
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: ${(p) => (p.$active ? "#181818" : "#f1f1f1")};
+  color: ${(p) => (p.$active ? "#fff" : "#666")};
+`;
+
+const MobileCardList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 16px 16px;
+  overflow-y: auto;
+  flex: 1;
+`;
+
+const MobileCard = styled.div`
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+`;
+
+const MobileCardEyebrow = styled.div<{ $color?: string }>`
+  background: ${(p) => p.$color || "#006a25"};
+  padding: 8px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const MobileCardBody = styled.div`
+  background: #fff;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const MobileCardFooter = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px 12px;
+  background: #fff;
+`;
+
+const MobileBottomNav = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 10px 16px 24px;
+  border-top: 1px solid #f0f0f0;
+  background: #fff;
+`;
+
+const MobileNavItem = styled.div<{ $active?: boolean }>`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+`;
+
+const MobileNavDot = styled.div<{ $color?: string }>`
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: ${(p) => p.$color || "#f1f1f1"};
+`;
+
+const MobileNavLabel = styled.div<{ $active?: boolean }>`
+  font-size: 10px;
+  font-weight: 500;
+  color: ${(p) => (p.$active ? "#181818" : "#999")};
+`;
+
+// ============================================================================
 // FULL SCREEN ALERT
 // ============================================================================
 
@@ -278,10 +417,10 @@ const brandFontMap: Record<string, string> = {
   deliveroo: '"Stratos Deliveroo", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
 };
 
-const LargeBadgeWrapper = styled.div`
+const LargeBadgeWrapper = styled.div<{ $mobile?: boolean }>`
   position: relative;
-  width: 140px;
-  height: 140px;
+  width: ${(p) => (p.$mobile ? "100px" : "140px")};
+  height: ${(p) => (p.$mobile ? "100px" : "140px")};
 
   &::after {
     content: "";
@@ -296,15 +435,15 @@ const LargeBadgeWrapper = styled.div`
   }
 `;
 
-const LargeBadge = styled.div<{ $color: string; $themeId?: string }>`
-  width: 140px;
-  height: 140px;
+const LargeBadge = styled.div<{ $color: string; $themeId?: string; $mobile?: boolean }>`
+  width: ${(p) => (p.$mobile ? "100px" : "140px")};
+  height: ${(p) => (p.$mobile ? "100px" : "140px")};
   border-radius: 50%;
   background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 64px;
+  font-size: ${(p) => (p.$mobile ? "44px" : "64px")};
   font-weight: 700;
   color: ${(props) => props.$color};
   font-family: ${(props) => brandFontMap[props.$themeId || "doordash"]} !important;
@@ -313,27 +452,27 @@ const LargeBadge = styled.div<{ $color: string; $themeId?: string }>`
   animation: ${badgePulse} 1.8s ${Theme.usage.motion.easing.subtle.default} infinite;
 `;
 
-const AlertTitle = styled.div<{ $themeId?: string }>`
-  font-size: 48px;
+const AlertTitle = styled.div<{ $themeId?: string; $mobile?: boolean }>`
+  font-size: ${(p) => (p.$mobile ? "28px" : "48px")};
   font-weight: 700;
   color: #fff;
   text-align: center;
   font-family: ${(props) => brandFontMap[props.$themeId || "doordash"]} !important;
 `;
 
-const AlertSummary = styled.div<{ $themeId?: string }>`
-  font-size: 16px;
+const AlertSummary = styled.div<{ $themeId?: string; $mobile?: boolean }>`
+  font-size: ${(p) => (p.$mobile ? "14px" : "16px")};
   font-weight: 500;
   color: rgba(255, 255, 255, 0.8);
   margin-top: -8px;
   font-family: ${(props) => brandFontMap[props.$themeId || "doordash"]} !important;
 `;
 
-const AlertSubtitle = styled.div<{ $themeId?: string }>`
-  font-size: 16px;
+const AlertSubtitle = styled.div<{ $themeId?: string; $mobile?: boolean }>`
+  font-size: ${(p) => (p.$mobile ? "14px" : "16px")};
   font-weight: 600;
   color: rgba(255, 255, 255, 0.7);
-  margin-top: 56px;
+  margin-top: ${(p) => (p.$mobile ? "32px" : "56px")};
   font-family: ${(props) => brandFontMap[props.$themeId || "doordash"]} !important;
 `;
 
@@ -522,7 +661,7 @@ function OrderDetailOverlay({ onClose, skipEntrance }: { onClose: () => void; sk
 
 const FADE_OUT_MS = 200;
 
-function FullScreenAlert({ alert, onDismiss, onView, themeId }: { alert: AlertType; onDismiss: () => void; onView: () => void; themeId?: string }) {
+function FullScreenAlert({ alert, onDismiss, onView, themeId, mobile }: { alert: AlertType; onDismiss: () => void; onView: () => void; themeId?: string; mobile?: boolean }) {
   const [dismissing, setDismissing] = useState(false);
   const dismissedRef = useRef(false);
 
@@ -552,92 +691,199 @@ function FullScreenAlert({ alert, onDismiss, onView, themeId }: { alert: AlertTy
         ✕
       </CloseBtn>
       <FullScreenContent>
-        <LargeBadgeWrapper>
-          <LargeBadge $color={alert.color} $themeId={themeId}>
+        <LargeBadgeWrapper $mobile={mobile}>
+          <LargeBadge $color={alert.color} $themeId={themeId} $mobile={mobile}>
             {alert.badgeIcon ? (
-              <Icon type={alert.badgeIcon as any} size={48} />
+              <Icon type={alert.badgeIcon as any} size={mobile ? 32 : 48} />
             ) : (
               "1"
             )}
           </LargeBadge>
         </LargeBadgeWrapper>
-        <AlertTitle $themeId={themeId}>{alert.title}</AlertTitle>
-        <AlertSummary $themeId={themeId}>{alert.summary}</AlertSummary>
-        <AlertSubtitle $themeId={themeId}>{alert.subtitle}</AlertSubtitle>
+        <AlertTitle $themeId={themeId} $mobile={mobile}>{alert.title}</AlertTitle>
+        <AlertSummary $themeId={themeId} $mobile={mobile}>{alert.summary}</AlertSummary>
+        <AlertSubtitle $themeId={themeId} $mobile={mobile}>{alert.subtitle}</AlertSubtitle>
       </FullScreenContent>
     </FullScreenOverlay>
   );
 }
 
+const mobileOrders = [
+  { name: "David C", price: "$28.00", items: "3 items", color: "#006a25" },
+  { name: "Emma E", price: "$16.50", items: "2 items", color: "#006a25" },
+  { name: "Joel M", price: "$42.00", items: "5 items", color: "#494949" },
+];
+
+const mobileFilters = [
+  { label: "All", active: true },
+  { label: "Needs action", active: false },
+  { label: "In progress", active: false },
+  { label: "Ready", active: false },
+  { label: "Scheduled", active: false },
+];
+
+function MobileContent() {
+  return (
+    <>
+      <MobileTopBar>
+        <MobileNotch />
+      </MobileTopBar>
+
+      <MobileHeader>
+        <MenuBtn>
+          <IconButton
+            iconType={IconType.Menu}
+            size={IconButtonSize.medium}
+            type={IconButtonType.tertiary}
+            accessibilityLabel="Menu"
+          />
+          <StatusDot style={{ width: 10, height: 10, borderWidth: 2 }} />
+        </MenuBtn>
+        <IconButton
+          iconType={IconType.Search}
+          size={IconButtonSize.medium}
+          type={IconButtonType.tertiary}
+          accessibilityLabel="Search"
+        />
+      </MobileHeader>
+
+      <MobileFilterRow>
+        {mobileFilters.map((f) => (
+          <MobileFilterChip key={f.label} $active={f.active}>
+            {f.label}
+          </MobileFilterChip>
+        ))}
+      </MobileFilterRow>
+
+      <MobileCardList>
+        {mobileOrders.map((order, i) => (
+          <MobileCard key={i}>
+            <MobileCardEyebrow $color={order.color}>
+              <PlaceholderLine $width="60px" $height="10px" style={{ background: "rgba(255,255,255,0.4)", borderRadius: "4px" }} />
+              <PlaceholderLine $width="50px" $height="10px" style={{ background: "rgba(255,255,255,0.4)", borderRadius: "4px" }} />
+            </MobileCardEyebrow>
+            <MobileCardBody>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <PlaceholderLine $width="35%" $height="16px" />
+                <PlaceholderLine $width="50px" $height="28px" style={{ borderRadius: "9999px", background: "#f1f1f1" }} />
+              </div>
+              <PlaceholderLine $width="55%" $height="12px" />
+              <PlaceholderLine $width="40%" $height="12px" />
+            </MobileCardBody>
+            <MobileCardFooter>
+              <FooterIconPlaceholder style={{ width: 32, height: 32 }} />
+              <FooterButtonPlaceholder style={{ height: 32 }} />
+            </MobileCardFooter>
+          </MobileCard>
+        ))}
+      </MobileCardList>
+
+      <MobileBottomNav>
+        {[
+          { label: "Orders", active: true, color: "#181818" },
+          { label: "Menu", active: false },
+          { label: "Business", active: false },
+          { label: "Settings", active: false },
+        ].map((item) => (
+          <MobileNavItem key={item.label} $active={item.active}>
+            <MobileNavDot $color={item.color} />
+            <MobileNavLabel $active={item.active}>{item.label}</MobileNavLabel>
+          </MobileNavItem>
+        ))}
+      </MobileBottomNav>
+    </>
+  );
+}
+
+function TabletContent(_props: { themeId?: string }) {
+  return (
+    <>
+      <TopBar>
+        <span>11:30 AM</span>
+      </TopBar>
+
+      <PageHeader>
+        <MenuBtn>
+          <IconButton
+            iconType={IconType.Menu}
+            size={IconButtonSize.large}
+            type={IconButtonType.tertiary}
+            accessibilityLabel="Menu"
+          />
+          <StatusDot />
+        </MenuBtn>
+
+        <TabBarWrapper>
+          <TabBar>
+            {tabs.map((tab, i) => (
+              <TabItem key={i} $isActive={tab.active}>
+                <PlaceholderLine
+                  $width={tab.width}
+                  $height="14px"
+                  style={{ background: tab.active ? "#bbb" : "#e0e0e0" }}
+                />
+              </TabItem>
+            ))}
+          </TabBar>
+        </TabBarWrapper>
+      </PageHeader>
+
+      <CardStack>
+        {orders.map((order) => (
+          <Card key={order.id}>
+            <CardEyebrow />
+            <CardBody>
+              <PlaceholderBlock>
+                <PlaceholderLine $width="55%" $height="18px" />
+                <PlaceholderLine $width="30%" />
+                <PlaceholderLine $width="40%" />
+              </PlaceholderBlock>
+
+              {[0, 1, 2].map((i) => (
+                <ItemPlaceholder key={i}>
+                  <QuantityBox />
+                  <ItemLines>
+                    <PlaceholderLine $width="60%" />
+                    <PlaceholderLine $width="45%" $height="12px" />
+                    <PlaceholderLine $width="45%" $height="12px" />
+                  </ItemLines>
+                </ItemPlaceholder>
+              ))}
+
+              <CardFooter>
+                <FooterIconPlaceholder />
+                <FooterButtonPlaceholder />
+              </CardFooter>
+            </CardBody>
+          </Card>
+        ))}
+      </CardStack>
+    </>
+  );
+}
+
 export function FullScreenAlertsDemo({ themeId }: { themeId?: string }) {
+  const [deviceMode, setDeviceMode] = useState<"tablet" | "mobile">("tablet");
   const [showAlert, setShowAlert] = useState(true);
   const [showOrderDetail, setShowOrderDetail] = useState(false);
   const [openedFromAlert, setOpenedFromAlert] = useState(false);
   const [selectedAlertId, setSelectedAlertId] = useState(alertTypes[0].id);
   const selectedAlert = alertTypes.find((a) => a.id === selectedAlertId)!;
+  const isMobile = deviceMode === "mobile";
+
   return (
     <Wrapper>
-      <DeviceFrame>
-        <TopBar>
-          <span>11:30 AM</span>
-        </TopBar>
+      <DeviceToggle>
+        <DeviceToggleBtn $active={deviceMode === "tablet"} onClick={() => { setDeviceMode("tablet"); setShowAlert(true); setShowOrderDetail(false); }}>
+          Tablet
+        </DeviceToggleBtn>
+        <DeviceToggleBtn $active={deviceMode === "mobile"} onClick={() => { setDeviceMode("mobile"); setShowAlert(true); setShowOrderDetail(false); }}>
+          Mobile
+        </DeviceToggleBtn>
+      </DeviceToggle>
 
-        <PageHeader>
-          <MenuBtn>
-            <IconButton
-              iconType={IconType.Menu}
-              size={IconButtonSize.large}
-              type={IconButtonType.tertiary}
-              accessibilityLabel="Menu"
-            />
-            <StatusDot />
-          </MenuBtn>
-
-          <TabBarWrapper>
-            <TabBar>
-              {tabs.map((tab, i) => (
-                <TabItem key={i} $isActive={tab.active}>
-                  <PlaceholderLine
-                    $width={tab.width}
-                    $height="14px"
-                    style={{ background: tab.active ? "#bbb" : "#e0e0e0" }}
-                  />
-                </TabItem>
-              ))}
-            </TabBar>
-          </TabBarWrapper>
-        </PageHeader>
-
-        <CardStack>
-          {orders.map((order) => (
-            <Card key={order.id}>
-              <CardEyebrow />
-              <CardBody>
-                <PlaceholderBlock>
-                  <PlaceholderLine $width="55%" $height="18px" />
-                  <PlaceholderLine $width="30%" />
-                  <PlaceholderLine $width="40%" />
-                </PlaceholderBlock>
-
-                {[0, 1, 2].map((i) => (
-                  <ItemPlaceholder key={i}>
-                    <QuantityBox />
-                    <ItemLines>
-                      <PlaceholderLine $width="60%" />
-                      <PlaceholderLine $width="45%" $height="12px" />
-                      <PlaceholderLine $width="45%" $height="12px" />
-                    </ItemLines>
-                  </ItemPlaceholder>
-                ))}
-
-                <CardFooter>
-                  <FooterIconPlaceholder />
-                  <FooterButtonPlaceholder />
-                </CardFooter>
-              </CardBody>
-            </Card>
-          ))}
-        </CardStack>
+      <DeviceFrame $mobile={isMobile}>
+        {isMobile ? <MobileContent /> : <TabletContent themeId={themeId} />}
 
         {showOrderDetail && (
           <OrderDetailOverlay
@@ -652,6 +898,7 @@ export function FullScreenAlertsDemo({ themeId }: { themeId?: string }) {
             onDismiss={() => setShowAlert(false)}
             onView={() => { setOpenedFromAlert(true); setShowOrderDetail(true); }}
             themeId={themeId}
+            mobile={isMobile}
           />
         )}
       </DeviceFrame>
