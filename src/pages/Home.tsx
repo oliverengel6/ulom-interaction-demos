@@ -34,6 +34,7 @@ import { CanceledOrdersDiagram } from "./CanceledOrders";
 import { OrderTypesDiagram } from "./OrderTypes";
 import { EmptyStatesDemo } from "./EmptyStates";
 import { OrderCardDemo, TagPriorityDiagram } from "./OrderCard";
+import { ScheduledOrdersDiagram } from "./ScheduledOrders";
 
 // ============================================================================
 // LAYOUT
@@ -641,6 +642,15 @@ const behaviors: Demo[] = [
 
 const legacyDocs: Demo[] = [
   {
+    id: "scheduled-orders",
+    label: "Scheduled orders",
+    description:
+      "How scheduled (future) orders flow through the KDS — from placement to the prep window opening to fulfillment at the scheduled time.",
+    instruction: "",
+    specs: [],
+    legacy: true,
+  },
+  {
     id: "canceled-orders",
     label: "Canceled orders",
     description:
@@ -866,6 +876,7 @@ export const Home = () => {
                 {activeDemo === "empty-states" && <EmptyStatesDemo />}
                 {activeDemo === "order-types" && <OrderTypesDiagram />}
                 {activeDemo === "canceled-orders" && <CanceledOrdersDiagram />}
+                {activeDemo === "scheduled-orders" && <ScheduledOrdersDiagram />}
               </DemoContent>
             </Theming>
             {currentDemo.instruction && (

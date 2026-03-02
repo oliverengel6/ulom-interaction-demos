@@ -299,7 +299,7 @@ const ToggleChip = styled.button<{ $active: boolean; $disabled?: boolean }>`
 
 const EYEBROW_COLORS: Record<string, { bg: string; text: string }> = {
   new: { bg: "#006A25", text: "#FBFBFB" },
-  scheduled: { bg: "#1537C7", text: "#FBFBFB" },
+  scheduled: { bg: "#494949", text: "#FBFBFB" },
 };
 
 const BRAND_FONTS: Record<Brand, { family: string; weight: number }> = {
