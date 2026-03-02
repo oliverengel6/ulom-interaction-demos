@@ -20,6 +20,8 @@ import {
   MerchantThemeCollection,
   WoltMerchantThemeCollection,
   DeliverooMerchantThemeCollection,
+  SearchField,
+  SearchFieldSize,
 } from "@doordash/prism-react";
 import { OrdersHomeDemo } from "./OrdersHome";
 import { SubtleAlertsDemo } from "./SubtleAlerts";
@@ -29,7 +31,9 @@ import { ToastsDemo } from "./Toasts";
 import { OrderSortingDiagram } from "./OrderSorting";
 import { NotificationLogicDiagram } from "./NotificationLogic";
 import { CanceledOrdersDiagram } from "./CanceledOrders";
+import { OrderTypesDiagram } from "./OrderTypes";
 import { EmptyStatesDemo } from "./EmptyStates";
+import { OrderCardDemo, TagPriorityDiagram } from "./OrderCard";
 
 // ============================================================================
 // LAYOUT
@@ -54,7 +58,6 @@ const Sidebar = styled.nav<{ $mobileOpen?: boolean }>`
   flex-direction: column;
   background-color: #fff;
   z-index: 110;
-  overflow-y: auto;
 
   @media (max-width: ${MOBILE_BREAKPOINT}) {
     transform: ${(p) => (p.$mobileOpen ? "translateX(0)" : "translateX(-100%)")};
@@ -128,6 +131,11 @@ const MobileTopBarSpacer = styled.div`
 
 const SidebarHeader = styled.div`
   padding: ${Spacing.large};
+  padding-bottom: ${Spacing.medium};
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: ${Spacing.medium};
   border-bottom: 1px solid ${IconColor.border.default};
 `;
 
@@ -136,7 +144,11 @@ const SidebarBody = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${Spacing.xxSmall};
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 `;
+
 
 const SidebarSectionLabel = styled.div`
   padding: ${Spacing.xSmall} ${Spacing.small};
@@ -154,6 +166,27 @@ const SidebarItem = styled.button<{ $isActive: boolean }>`
 
   &:hover {
     background-color: ${IconColor.background.hovered};
+  }
+`;
+
+const DesktopTopBar = styled.div<{ $visible: boolean }>`
+  position: fixed;
+  top: 0;
+  left: 260px;
+  right: 0;
+  display: flex;
+  align-items: center;
+  padding: ${Spacing.small} 48px;
+  background: #fff;
+  border-bottom: 1px solid ${IconColor.border.default};
+  z-index: 100;
+  transform: translateY(${(p) => (p.$visible ? "0" : "-100%")});
+  opacity: ${(p) => (p.$visible ? 1 : 0)};
+  transition: transform 200ms ease, opacity 200ms ease;
+  pointer-events: ${(p) => (p.$visible ? "auto" : "none")};
+
+  @media (max-width: ${MOBILE_BREAKPOINT}) {
+    display: none;
   }
 `;
 
@@ -559,6 +592,15 @@ const demos: Demo[] = [
     ],
   },
   {
+    id: "order-card",
+    label: "Order card",
+    description:
+      "Interactive preview of how the order card adapts based on product line, fulfillment type, timing, and specialty attributes.",
+    instruction: "Use the controls on the left to configure the order",
+    specs: [],
+    wip: true,
+  },
+  {
     id: "empty-states",
     label: "Empty states",
     description:
@@ -588,6 +630,17 @@ const behaviors: Demo[] = [
     wip: true,
   },
   {
+    id: "order-types",
+    label: "Order types",
+    description:
+      "All specialty order types that exist today, including product lines, fulfillment types, and special attributes like group, gift, and catering orders.",
+    instruction: "",
+    specs: [],
+  },
+];
+
+const legacyDocs: Demo[] = [
+  {
     id: "canceled-orders",
     label: "Canceled orders",
     description:
@@ -598,7 +651,7 @@ const behaviors: Demo[] = [
   },
 ];
 
-const allPages = [...demos, ...behaviors];
+const allPages = [...demos, ...behaviors, ...legacyDocs];
 
 // ============================================================================
 // COMPONENT
@@ -614,17 +667,23 @@ export const Home = () => {
   const [activeThemeId] = useState("doordash");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pageTitleVisible, setPageTitleVisible] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const pageTitleRef = useRef<HTMLSpanElement>(null);
 
   const currentDemo = allPages.find((d) => d.id === activeDemo)!;
   const currentTheme = themeOptions.find((t) => t.id === activeThemeId)!;
+
+  const q = searchQuery.toLowerCase();
+  const filteredDemos = demos.filter((d) => d.label.toLowerCase().includes(q));
+  const filteredBehaviors = behaviors.filter((d) => d.label.toLowerCase().includes(q));
+  const filteredLegacy = legacyDocs.filter((d) => d.label.toLowerCase().includes(q));
 
   useEffect(() => {
     const el = pageTitleRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => setPageTitleVisible(entry.isIntersecting),
-      { threshold: 0, rootMargin: "-80px 0px 0px 0px" }
+      { threshold: 0 }
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -646,15 +705,26 @@ export const Home = () => {
               Questions? @<a href="https://doordash.enterprise.slack.com/team/U073XBFAWUV" target="_blank" rel="noopener noreferrer" style={{ color: "inherit" }}>Oliver</a> on Slack
             </Text>
           </StackChildren>
+          <SearchField
+            label="Search"
+            isLabelHidden
+            placeholder="Search…"
+            value={searchQuery}
+            onChange={(value) => setSearchQuery(value)}
+            onValueClear={() => setSearchQuery("")}
+            size={SearchFieldSize.small}
+          />
         </SidebarHeader>
 
         <SidebarBody>
+          {filteredDemos.length > 0 && (
           <SidebarSectionLabel>
             <Text textStyle={TextStyle.label.small.strong} color={TextColor.text.subdued.default}>
               DEMOS
             </Text>
           </SidebarSectionLabel>
-          {demos.map((demo) => (
+          )}
+          {filteredDemos.map((demo) => (
             <SidebarItem
               key={demo.id}
               $isActive={activeDemo === demo.id}
@@ -676,12 +746,14 @@ export const Home = () => {
             </SidebarItem>
           ))}
 
+          {filteredBehaviors.length > 0 && (
           <SidebarSectionLabel style={{ marginTop: 12 }}>
             <Text textStyle={TextStyle.label.small.strong} color={TextColor.text.subdued.default}>
               BEHAVIOR
             </Text>
           </SidebarSectionLabel>
-          {behaviors.map((item) => (
+          )}
+          {filteredBehaviors.map((item) => (
             <SidebarItem
               key={item.id}
               $isActive={activeDemo === item.id}
@@ -702,9 +774,45 @@ export const Home = () => {
               </span>
             </SidebarItem>
           ))}
+
+          {filteredLegacy.length > 0 && (
+          <SidebarSectionLabel style={{ marginTop: 12 }}>
+            <Text textStyle={TextStyle.label.small.strong} color={TextColor.text.subdued.default}>
+              LEGACY DOCUMENTATION
+            </Text>
+          </SidebarSectionLabel>
+          )}
+          {filteredLegacy.map((item) => (
+            <SidebarItem
+              key={item.id}
+              $isActive={activeDemo === item.id}
+              onClick={() => handleNavClick(item.id)}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <Text
+                  textStyle={
+                    activeDemo === item.id
+                      ? TextStyle.label.medium.strong
+                      : TextStyle.label.medium.default
+                  }
+                >
+                  {item.label}
+                </Text>
+                {item.legacy && <LegacyBadge>LEG</LegacyBadge>}
+              </span>
+            </SidebarItem>
+          ))}
         </SidebarBody>
 
       </Sidebar>
+
+      <DesktopTopBar $visible={!pageTitleVisible}>
+        <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <Text textStyle={TextStyle.label.medium.strong}>{currentDemo.label}</Text>
+          {currentDemo.wip && <WipBadge>Work in progress</WipBadge>}
+          {currentDemo.legacy && <LegacyBadge>Legacy</LegacyBadge>}
+        </span>
+      </DesktopTopBar>
 
       <MainContent>
         <MobileTopBar>
@@ -754,7 +862,9 @@ export const Home = () => {
                 {activeDemo === "toasts" && <ToastsDemo />}
                 {activeDemo === "order-sorting" && <OrderSortingDiagram />}
                 {activeDemo === "notification-logic" && <NotificationLogicDiagram />}
+                {activeDemo === "order-card" && <OrderCardDemo />}
                 {activeDemo === "empty-states" && <EmptyStatesDemo />}
+                {activeDemo === "order-types" && <OrderTypesDiagram />}
                 {activeDemo === "canceled-orders" && <CanceledOrdersDiagram />}
               </DemoContent>
             </Theming>
@@ -766,6 +876,8 @@ export const Home = () => {
               </InstructionHint>
             )}
           </DemoArea>
+
+          {activeDemo === "order-card" && <TagPriorityDiagram />}
 
           {currentDemo.specs.length > 0 && (
           <StackChildren size={Spacing.medium}>
