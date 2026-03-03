@@ -220,7 +220,7 @@ const CodeChip = styled.code`
 // TAB CONTENT
 // ============================================================================
 
-type ViewTab = "overview" | "not_paid_reasons" | "sources";
+type ViewTab = "overview" | "not_paid_reasons" | "sources" | "issue_with_order";
 
 function OverviewDiagram() {
   return (
@@ -572,6 +572,497 @@ function SourcesDiagram() {
 }
 
 // ============================================================================
+// ISSUE WITH ORDER TAB
+// ============================================================================
+
+const SectionTitle = styled.div`
+  margin: 32px 0 16px;
+  text-align: center;
+`;
+
+const EntryPointFlow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+`;
+
+const EntryPointStep = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 20px;
+  border-radius: ${Theme.usage.borderRadius.medium};
+  background: ${Theme.usage.color.background.strong.default};
+  text-align: center;
+  min-width: 140px;
+`;
+
+const EntryArrow = styled.div`
+  font-size: 18px;
+  color: #ccc;
+`;
+
+const MatrixWrapper = styled.div`
+  width: 100%;
+  max-width: 780px;
+  margin: 0 auto;
+`;
+
+const MatrixSection = styled.div`
+  margin-bottom: 24px;
+`;
+
+const MatrixHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: ${Theme.usage.borderRadius.medium} ${Theme.usage.borderRadius.medium} 0 0;
+  background: ${Theme.usage.color.background.inverse.default};
+`;
+
+const MatrixBody = styled.div`
+  border: 1.5px solid ${Theme.usage.color.border.default};
+  border-top: none;
+  border-radius: 0 0 ${Theme.usage.borderRadius.medium} ${Theme.usage.borderRadius.medium};
+  overflow: hidden;
+`;
+
+const MatrixRow = styled.div<{ $even?: boolean }>`
+  display: flex;
+  align-items: stretch;
+  background: ${(p) => (p.$even ? Theme.usage.color.background.strong.default : "#fff")};
+  border-bottom: 1px solid ${Theme.usage.color.border.default};
+
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const MatrixStatusCell = styled.div`
+  width: 200px;
+  flex-shrink: 0;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  border-right: 1px solid ${Theme.usage.color.border.default};
+`;
+
+const MatrixActionsCell = styled.div`
+  flex: 1;
+  padding: 8px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+`;
+
+const ActionChip = styled.div<{ $color?: string }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: ${Theme.usage.borderRadius.full};
+  background: ${(p) => p.$color || Theme.usage.color.background.strong.default};
+  white-space: nowrap;
+`;
+
+const CancelFlowWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  max-width: 400px;
+  margin: 0 auto;
+`;
+
+const ModalMock = styled.div`
+  width: 100%;
+  max-width: 380px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+  background: #fff;
+`;
+
+const ModalBody = styled.div`
+  padding: 24px 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+`;
+
+const ModalActions = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 24px 24px;
+`;
+
+const ModalBtn = styled.div<{ $destructive?: boolean }>`
+  padding: 12px;
+  border-radius: 9999px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+  background: ${(p) => (p.$destructive ? "#B71000" : "#f1f1f1")};
+  color: ${(p) => (p.$destructive ? "#fff" : "#181818")};
+`;
+
+const SubflowGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  width: 100%;
+  max-width: 780px;
+  margin: 0 auto;
+`;
+
+const SubflowCard = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: ${Theme.usage.borderRadius.medium};
+  background: ${Theme.usage.color.background.default};
+  border: 1.5px solid ${Theme.usage.color.border.default};
+`;
+
+const SubflowIcon = styled.div`
+  font-size: 18px;
+  line-height: 1;
+`;
+
+const LiveCalloutBar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: ${Theme.usage.borderRadius.medium};
+  background: #eef6ff;
+  border: 1.5px solid #c4ddf6;
+  max-width: 780px;
+  margin: 0 auto 16px;
+`;
+
+const DRIVE_MATRIX: { status: string; description: string; actions: { label: string; color?: string }[] }[] = [
+  {
+    status: "Scheduled",
+    description: "Order placed, not yet active",
+    actions: [
+      { label: "Reschedule" },
+      { label: "Item Out of Stock" },
+      { label: "Cancel Order", color: "#fde8e8" },
+      { label: "Get Help" },
+    ],
+  },
+  {
+    status: "En route to store",
+    description: "Dasher heading to merchant",
+    actions: [
+      { label: "Item Out of Stock" },
+      { label: "Cancel Order", color: "#fde8e8" },
+      { label: "Get Help" },
+    ],
+  },
+  {
+    status: "Arrived at store",
+    description: "Dasher is at the merchant",
+    actions: [
+      { label: "Item Out of Stock" },
+      { label: "Cancel Order", color: "#fde8e8" },
+      { label: "Get Help" },
+    ],
+  },
+  {
+    status: "En route to consumer",
+    description: "Dasher delivering to customer",
+    actions: [{ label: "Get Help" }],
+  },
+  {
+    status: "Arrived at consumer",
+    description: "Dasher at customer location",
+    actions: [{ label: "Get Help" }],
+  },
+  {
+    status: "Returning to store",
+    description: "Dasher returning order",
+    actions: [{ label: "Get Help" }],
+  },
+  {
+    status: "Delivered / Abandoned / Returned",
+    description: "Completed states",
+    actions: [{ label: "Rate Dasher" }, { label: "Get Help" }],
+  },
+  {
+    status: "Cancelled",
+    description: "Already cancelled",
+    actions: [{ label: "Get Help" }],
+  },
+];
+
+const MARKETPLACE_MATRIX: { status: string; description: string; actions: { label: string; color?: string }[] }[] = [
+  {
+    status: "Before pickup",
+    description: "Order not yet picked up",
+    actions: [
+      { label: "Get Help" },
+      { label: "Order Adjustments" },
+      { label: "Item Out of Stock" },
+    ],
+  },
+  {
+    status: "After pickup",
+    description: "Dasher has the order",
+    actions: [{ label: "Get Help" }],
+  },
+  {
+    status: "With error charges",
+    description: "Cancellation charge applied",
+    actions: [{ label: "Dispute Charge" }],
+  },
+  {
+    status: "Dasher assigned",
+    description: "Any state with a dasher",
+    actions: [{ label: "Rate Dasher" }],
+  },
+];
+
+const STOREFRONT_MATRIX: { status: string; description: string; actions: { label: string; color?: string }[] }[] = [
+  {
+    status: "Active order",
+    description: "Order is in progress",
+    actions: [{ label: "Support Form" }, { label: "Get Help" }],
+  },
+  {
+    status: "Refund eligible",
+    description: "Qualifies for merchant-initiated refund",
+    actions: [
+      { label: "Issue Refund" },
+      { label: "Support Form" },
+      { label: "Get Help" },
+    ],
+  },
+  {
+    status: "Dasher delivery",
+    description: "Fulfilled by Dasher",
+    actions: [{ label: "Rate Dasher" }, { label: "Support Form" }, { label: "Get Help" }],
+  },
+];
+
+const SUBFLOWS: { icon: string; label: string; description: string }[] = [
+  { icon: "🚫", label: "Item Out of Stock", description: "Mark specific items as unavailable. Triggers substitution or partial refund flow." },
+  { icon: "💬", label: "Get Help", description: "Opens the Help bottom sheet with contextual support options for the current order." },
+  { icon: "📅", label: "Reschedule", description: "Change the scheduled delivery time. Only available for Drive scheduled orders." },
+  { icon: "⭐", label: "Rate Dasher", description: "Leave feedback on Dasher performance after delivery or if order was abandoned." },
+  { icon: "⚖️", label: "Dispute Charge", description: "Challenge an error charge on a cancelled DD/Caviar order with self-delivery." },
+  { icon: "💸", label: "Issue / Request Refund", description: "Merchant-initiated refund for Storefront or Drive orders when eligible." },
+  { icon: "📝", label: "Order Adjustments", description: "Modify item quantities or mark items out of stock before pickup (BMA feature)." },
+  { icon: "📞", label: "Call / Chat", description: "Call customer or Dasher, or open support chat. Shown at the top of the sheet for all live orders." },
+];
+
+function ActionMatrix({
+  title,
+  rows,
+}: {
+  title: string;
+  rows: { status: string; description: string; actions: { label: string; color?: string }[] }[];
+}) {
+  return (
+    <MatrixSection>
+      <MatrixHeader>
+        <Text textStyle={TextStyle.label.small.strong} color={TextColor.text.inverse.default}>
+          {title}
+        </Text>
+      </MatrixHeader>
+      <MatrixBody>
+        {rows.map((row, i) => (
+          <MatrixRow key={row.status} $even={i % 2 === 1}>
+            <MatrixStatusCell>
+              <Text textStyle={TextStyle.label.small.strong} style={{ fontSize: 12 }}>
+                {row.status}
+              </Text>
+              <Text
+                textStyle={TextStyle.body.small.default}
+                color={TextColor.text.subdued.default}
+                style={{ fontSize: 11 }}
+              >
+                {row.description}
+              </Text>
+            </MatrixStatusCell>
+            <MatrixActionsCell>
+              {row.actions.map((action) => (
+                <ActionChip key={action.label} $color={action.color}>
+                  <Text textStyle={TextStyle.label.small.default} style={{ fontSize: 11 }}>
+                    {action.label}
+                  </Text>
+                </ActionChip>
+              ))}
+            </MatrixActionsCell>
+          </MatrixRow>
+        ))}
+      </MatrixBody>
+    </MatrixSection>
+  );
+}
+
+function IssueWithOrderDiagram() {
+  return (
+    <DiagramContainer>
+      {/* Entry point */}
+      <SectionTitle>
+        <Text textStyle={TextStyle.label.small.default} color={TextColor.text.subdued.default}>
+          ENTRY POINT
+        </Text>
+      </SectionTitle>
+
+      <EntryPointFlow>
+        <EntryPointStep>
+          <Text textStyle={TextStyle.label.small.strong}>Order Details</Text>
+          <Text textStyle={TextStyle.body.small.default} color={TextColor.text.subdued.default}>
+            Tap on any order card
+          </Text>
+        </EntryPointStep>
+        <EntryArrow>→</EntryArrow>
+        <EntryPointStep>
+          <Text textStyle={TextStyle.label.small.strong}>⋮ More button</Text>
+          <Text textStyle={TextStyle.body.small.default} color={TextColor.text.subdued.default}>
+            Three-dot icon in header
+          </Text>
+        </EntryPointStep>
+        <EntryArrow>→</EntryArrow>
+        <EntryPointStep style={{ background: Theme.usage.color.background.inverse.default }}>
+          <Text textStyle={TextStyle.label.small.strong} color={TextColor.text.inverse.default}>
+            Order Action Sheet
+          </Text>
+          <Text textStyle={TextStyle.body.small.default} color={TextColor.text.inverse.default} style={{ opacity: 0.7 }}>
+            Bottom sheet with actions
+          </Text>
+        </EntryPointStep>
+      </EntryPointFlow>
+
+      {/* Call/Chat callout */}
+      <SectionTitle>
+        <Text textStyle={TextStyle.label.small.default} color={TextColor.text.subdued.default}>
+          AVAILABLE ACTIONS BY ORDER STATE
+        </Text>
+      </SectionTitle>
+
+      <LiveCalloutBar>
+        <Text textStyle={TextStyle.body.small.default} style={{ fontSize: 16 }}>📞</Text>
+        <div>
+          <Text textStyle={TextStyle.label.small.strong} style={{ fontSize: 12 }}>
+            Call / Chat actions
+          </Text>
+          <Text textStyle={TextStyle.body.small.default} color={TextColor.text.subdued.default} style={{ fontSize: 11 }}>
+            Shown at the top of the action sheet for all live orders (Scheduled through Returning to Store)
+          </Text>
+        </div>
+      </LiveCalloutBar>
+
+      {/* Matrix tables */}
+      <MatrixWrapper>
+        <ActionMatrix title="Drive Orders" rows={DRIVE_MATRIX} />
+        <ActionMatrix title="DD / Caviar (Marketplace) Orders" rows={MARKETPLACE_MATRIX} />
+        <ActionMatrix title="Storefront Orders" rows={STOREFRONT_MATRIX} />
+      </MatrixWrapper>
+
+      {/* Cancel subflow */}
+      <SectionTitle>
+        <Text textStyle={TextStyle.label.small.default} color={TextColor.text.subdued.default}>
+          CANCEL ORDER SUBFLOW
+        </Text>
+      </SectionTitle>
+
+      <CancelFlowWrapper>
+        <Node>
+          <Text textStyle={TextStyle.label.small.strong}>Merchant taps "Cancel order"</Text>
+          <Text textStyle={TextStyle.body.small.default} color={TextColor.text.subdued.default}>
+            Drive orders only — before pickup
+          </Text>
+        </Node>
+        <Arrow />
+
+        <ModalMock>
+          <ModalBody>
+            <Text textStyle={TextStyle.label.small.strong}>Cancel order</Text>
+            <Text textStyle={TextStyle.body.small.default} color={TextColor.text.subdued.default}>
+              Are you sure you want to cancel{" "}
+              <strong>Emma E</strong>'s order?
+            </Text>
+          </ModalBody>
+          <ModalActions>
+            <ModalBtn $destructive>Yes, cancel</ModalBtn>
+            <ModalBtn>No, don't cancel</ModalBtn>
+          </ModalActions>
+        </ModalMock>
+
+        <Arrow />
+        <Node $variant="subtle">
+          <Text textStyle={TextStyle.label.small.strong}>API call</Text>
+          <Text textStyle={TextStyle.body.small.default} color={TextColor.text.subdued.default}>
+            PUT api/v1/delivery/&#123;deliveryUuid&#125;
+          </Text>
+        </Node>
+        <Arrow />
+        <div style={{ display: "flex", gap: 12 }}>
+          <ResultNode $color="#B71000">
+            <Text textStyle={TextStyle.label.small.strong} color={TextColor.text.inverse.default}>
+              Order cancelled
+            </Text>
+            <Text
+              textStyle={TextStyle.body.small.default}
+              color={TextColor.text.inverse.default}
+              style={{ opacity: 0.7 }}
+            >
+              No reason selection — backend assigns default
+            </Text>
+          </ResultNode>
+        </div>
+      </CancelFlowWrapper>
+
+      <SourceRef style={{ marginTop: 16, marginBottom: 0 }}>
+        <Text textStyle={TextStyle.body.small.default} color={TextColor.text.subdued.default}>
+          Source: <CodeChip>CancelOrder.tsx</CodeChip> modal,{" "}
+          <CodeChip>driveUtils.ts</CodeChip> /{" "}
+          <CodeChip>marketplaceUtils.ts</CodeChip>
+        </Text>
+      </SourceRef>
+
+      {/* Other subflows */}
+      <SectionTitle>
+        <Text textStyle={TextStyle.label.small.default} color={TextColor.text.subdued.default}>
+          OTHER ACTION SHEET OPTIONS
+        </Text>
+      </SectionTitle>
+
+      <SubflowGrid>
+        {SUBFLOWS.map((sf) => (
+          <SubflowCard key={sf.label}>
+            <SubflowIcon>{sf.icon}</SubflowIcon>
+            <Text textStyle={TextStyle.label.small.strong}>{sf.label}</Text>
+            <Text
+              textStyle={TextStyle.body.small.default}
+              color={TextColor.text.subdued.default}
+              style={{ fontSize: 12 }}
+            >
+              {sf.description}
+            </Text>
+          </SubflowCard>
+        ))}
+      </SubflowGrid>
+    </DiagramContainer>
+  );
+}
+
+// ============================================================================
 // BRAND SWITCHER
 // ============================================================================
 
@@ -699,6 +1190,7 @@ const tabs: { id: ViewTab; label: string }[] = [
   { id: "overview", label: "Payment Policy" },
   { id: "not_paid_reasons", label: "Not Paid Reasons" },
   { id: "sources", label: "Cancellation Sources" },
+  { id: "issue_with_order", label: "Issue with Order" },
 ];
 
 export function CanceledOrdersDiagram() {
@@ -776,6 +1268,7 @@ export function CanceledOrdersDiagram() {
           {activeTab === "overview" && <OverviewDiagram />}
           {activeTab === "not_paid_reasons" && <NotPaidReasonsDiagram />}
           {activeTab === "sources" && <SourcesDiagram />}
+          {activeTab === "issue_with_order" && <IssueWithOrderDiagram />}
 
           <SourceRef>
             <Text
